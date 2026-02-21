@@ -14,18 +14,19 @@ MODEL = "Knob Smart Toilet"
 DEFAULT_SCAN_TIMEOUT = 10  # 秒
 DEFAULT_CONNECTION_TIMEOUT = 30  # 秒
 DEFAULT_STATUS_POLL_INTERVAL = 30  # 秒
+DEFAULT_AUTO_CONNECT = True  # 默认自动连接
 
 # ============================================================================
 # BLE UUID
 # ============================================================================
 # VCX-Knob 设备的服务 UUID
-BLE_SERVICE_UUID = "0000FFF0-0000-1000-8000-00805F9B34FB"
+BLE_SERVICE_UUID = "0000FFA0-0000-1000-8000-00805F9B34FB"
 
 # 写特征 UUID - 用于发送命令
-BLE_WRITE_CHARACTERISTIC_UUID = "0000FFF1-0000-1000-8000-00805F9B34FB"
+BLE_WRITE_CHARACTERISTIC_UUID = "0000FFA1-0000-1000-8000-00805F9B34FB"
 
 # 通知特征 UUID - 用于接收状态更新
-BLE_NOTIFY_CHARACTERISTIC_UUID = "0000FFF2-0000-1000-8000-00805F9B34FB"
+BLE_NOTIFY_CHARACTERISTIC_UUID = "0000FFA2-0000-1000-8000-00805F9B34FB"
 
 # 设备名称过滤器
 BLE_DEVICE_NAME_FILTER = "VCX-Knob"
@@ -42,45 +43,96 @@ PROTOCOL_STATUS_TYPE = 0x88  # 状态类型
 
 
 class Command(StrEnum):
-    """VCX-Knob 设备的命令码"""
+    """VCX-Knob 设备的命令码
+
+    命令格式参考微信小程序和 Node.js 服务的实现
+    """
+
+    # ========================================================================
+    # 核心命令（P0 - 必须实现）
+    # ========================================================================
 
     # 查询命令
-    ZHUANGTAI = "00"  # 查询状态
+    ZHUANGTAI = "FF"  # 查询状态
+
+    # 清洗命令（核心功能）
+    FUXI = "01"  # 妇洗
+    TUNXI = "02"  # 臀洗
+    HONGGAN = "04"  # 烘干/停止
+    STOP = "09"  # 停止
+    FANGAI = "05"  # 翻盖
+    FANQUAN = "06"  # 翻圈
+    SHUIYA = "0A"  # 水压调节
+    PENGAN = "0C"  # 喷杆调节
+    ANMO = "14"  # 按摩
 
     # 冲水命令
     DACHONG = "07"  # 大冲水
     XIAOCHONG = "17"  # 小冲水
 
-    # 座圈命令
+    # 气泡命令
+    PAOMO = "12"  # 气泡
+    KONGQI = "19"  # 空气
+
+    # ========================================================================
+    # 温度和档位命令（P0 - 必须实现）
+    # ========================================================================
+
     ZUOWEN = "30"  # 座温
-    ZUOYI = "31"  # 座椅位置
-
-    # 水温命令
     SHUIWEN = "10"  # 水温
-    SHUILIANG = "11"  # 水量
+    FENGWEN = "20"  # 风温
 
-    # 热风命令
-    QIANGWEN = "20"  # 热风温度
-    QIANGDANG = "21"  # 热风档位
+    # 保留别名以兼容现有代码
+    QIANGWEN = "20"  # 风温（别名）
+    SHUILIANG = "06"  # 水量（使用翻圈命令值）
+
+    # 档位命令
+    QIANGDANG = "21"  # 热风档位（需要确认实际命令码）
+
+    # ========================================================================
+    # 机械控制命令（P1 - 重要）
+    # ========================================================================
+
+    JIENENG = "13"  # 节能/关闭
+
+    # 翻盖翻圈子命令
+    FENWEIDENG = "1A"  # 氛围灯
+    ZIJIE = "11"  # 自洁
+    PENTOU = "1B"  # 喷头
+
+    # 润壁命令
+    RUNBI = "E3"  # 润壁
+
+    # ========================================================================
+    # 其他控制命令
+    # ========================================================================
+
+    ZIDONG = "08"  # 自动模式
+    SHUIMIAN = "18"  # 水面
 
     # 灯光命令
-    GUANGDENG = "50"  # 夜灯
-    GUANGDANG = "51"  # 灯光亮度
-
-    # 自动命令
-    ZIDONG = "60"  # 自动模式
-
-    # 气泡命令
-    PAOMO = "70"  # 气泡模式
+    GUANGDENG = "50"  # 夜灯（需要确认实际命令码）
+    GUANGDANG = "51"  # 灯光亮度（需要确认实际命令码）
 
     # 语音命令
-    YUYIN = "80"  # 语音控制
+    YUYIN = "80"  # 语音控制（需要确认实际命令码）
+
+    # ========================================================================
+    # 工程模式命令（P2 - 可选）
+    # ========================================================================
 
     # 传感器命令
     CHUANGAN = "90"  # 传感器设置
 
     # 系统命令
-    FUYUAN = "A0"  # 恢复出厂设置
+    HUIFUCHUCHANG = "26"  # 恢复出厂设置
+    FUYUAN = "26"  # 恢复出厂设置（别名）
+
+    # 脚感应
+    JIAOGAN = "A4"  # 脚感应
+
+    # 杀菌时间
+    SHAJUN = "F1"  # 杀菌时间
 
 
 # ============================================================================
@@ -417,6 +469,7 @@ BINARY_SENSORS = [
 
 CONF_DEVICE_ADDRESS = "device_address"
 CONF_DEVICE_NAME = "device_name"
+CONF_AUTO_CONNECT = "auto_connect"  # 是否自动连接
 
 # ============================================================================
 # 状态键
@@ -431,6 +484,16 @@ STATE_RADAR_ENABLED = "radar_enabled"
 STATE_VOICE_ENABLED = "voice_enabled"
 STATE_SENSORS_ENABLED = "sensors_enabled"
 STATE_LIGHTS_ENABLED = "lights_enabled"
+
+# 新增状态键（来自 Type 01 包扩展字段）
+STATE_WATER_SURFACE_ENABLED = "water_surface_enabled"
+STATE_AUTO_AMBIENT_LIGHT_ENABLED = "auto_ambient_light_enabled"
+STATE_AMBIENT_LIGHT_ENABLED = "ambient_light_enabled"
+STATE_BREATHING_LIGHT_ENABLED = "breathing_light_enabled"
+STATE_RUNBI_ENABLED = "runbi_enabled"
+STATE_AUTO_FLUSH_ENABLED = "auto_flush_enabled"
+STATE_VIRTUAL_SEAT_ENABLED = "virtual_seat_enabled"
+STATE_BIG_FLUSH_MODE = "big_flush_mode"
 
 # 温度状态键（来自 Type 02 包）
 STATE_WATER_TEMP_CODE = "water_temp_code"
@@ -458,6 +521,9 @@ STATE_COVER_CLOSE_INTENSITY = "cover_close_intensity"
 STATE_BUBBLE_LEVEL = "bubble_level"
 STATE_BIG_FLUSH_TIMING = "big_flush_timing"
 STATE_SMALL_FLUSH_TIMING = "small_flush_timing"
+STATE_BIG_FLUSH_DOWN = "big_flush_down"
+STATE_BIG_FLUSH_NO_WATER = "big_flush_no_water"
+STATE_SMALL_FLUSH_NO_WATER = "small_flush_no_water"
 
 # 传感器状态键（来自 Type 06 包）
 STATE_FOOT_SENSOR_ENABLED = "foot_sensor_enabled"

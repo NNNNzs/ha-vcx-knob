@@ -30,8 +30,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
+    CONF_AUTO_CONNECT,
     CONF_DEVICE_ADDRESS,
     CONF_DEVICE_NAME,
+    DEFAULT_AUTO_CONNECT,
     DEFAULT_SCAN_TIMEOUT,
     DOMAIN,
     BLE_DEVICE_NAME_FILTER,
@@ -278,6 +280,11 @@ class VCXKnobConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         此步骤显示选定的设备并允许在连接前自定义
 
+        用户可以选择：
+        - 自定义设备名称
+        - 是否立即连接设备（扫描+连接模式）
+        - 是否测试连接
+
         Args:
             user_input: 用户输入
 
@@ -287,17 +294,19 @@ class VCXKnobConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # 测试连接
-            try:
-                await self._async_test_connection()
+            auto_connect = user_input.get(CONF_AUTO_CONNECT, DEFAULT_AUTO_CONNECT)
 
-            except Exception as err:
-                _LOGGER.error("连接测试失败: %s", err)
-                errors["base"] = "cannot_connect"
+            # 如果用户选择自动连接，先测试连接
+            if auto_connect:
+                try:
+                    await self._async_test_connection()
+                except Exception as err:
+                    _LOGGER.error("连接测试失败: %s", err)
+                    errors["base"] = "cannot_connect"
+                    # 显示错误，但仍然允许继续
 
-            else:
-                # 创建配置条目
-                return self._async_create_entry(user_input)
+            # 创建配置条目（无论连接测试是否成功）
+            return self._async_create_entry(user_input)
 
         # 如果尚未设置唯一 ID
         if self._selected_device:
@@ -309,6 +318,10 @@ class VCXKnobConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_DEVICE_NAME,
                 default=self._selected_device.name if self._selected_device else BLE_DEVICE_NAME_FILTER,
             ): str,
+            vol.Optional(
+                CONF_AUTO_CONNECT,
+                default=DEFAULT_AUTO_CONNECT,
+            ): bool,
         })
 
         return self.async_show_form(
@@ -366,12 +379,14 @@ class VCXKnobConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_DEVICE_NAME,
             self._selected_device.name if self._selected_device else BLE_DEVICE_NAME_FILTER,
         )
+        auto_connect = user_input.get(CONF_AUTO_CONNECT, DEFAULT_AUTO_CONNECT)
 
         return self.async_create_entry(
             title=device_name,
             data={
                 CONF_DEVICE_ADDRESS: self._selected_device.address,
                 CONF_DEVICE_NAME: device_name,
+                CONF_AUTO_CONNECT: auto_connect,
             },
         )
 

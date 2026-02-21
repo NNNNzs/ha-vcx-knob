@@ -203,25 +203,70 @@ def decode_type_01_packet(data1: int, data2: int, data3: int) -> dict:
     - 第3位: 雷达启用
     - 第2位: 语音启用
     - 第1位: 传感器启用
-    - 第0位: 灯光启用
+    - 第0位: 节能启用
+
+    data2 的位布局 (第5个字节):
+    - 第7位: 水面状态
+    - 第6位: 自动氛围灯状态
+    - 第5位: 氛围灯状态
+    - 第4位: 呼吸氛围灯状态
+    - 第3-0位: 保留
+
+    data3 的位布局 (第6个字节):
+    - 第7位: 润壁状态
+    - 第6位: 罐自动冲状态
+    - 第5位: 虚拟坐座状态
+    - 第4位: 保留
+    - 第3-0位: 大冲水模式 (0=不水, 1=下冲, 2=上冲, 3=其他)
 
     Args:
         data1: 包含启用/禁用标志的第一个数据字节
-        data2: 第二个数据字节（此数据包类型中未使用）
-        data3: 第三个数据字节（此数据包类型中未使用）
+        data2: 第二个数据字节
+        data3: 第三个数据字节
 
     Returns:
         包含解码状态标志的字典
     """
+    # data1 的 8 个位
+    chongshui_status = bool(data1 & 0x80)  # 冲水状态
+    zhuozuo_status = bool(data1 & 0x40)    # 座座状态
+    paopao_status = bool(data1 & 0x20)     # 气泡状态
+    kongqi_status = bool(data1 & 0x10)     # 空气状态
+    leida_status = bool(data1 & 0x08)      # 雷达状态
+    yuyin_status = bool(data1 & 0x04)      # 语音状态
+    jiaogan_status = bool(data1 & 0x02)    # 脚感状态
+    jieneng_status = bool(data1 & 0x01)    # 节能状态
+
+    # data2 的 8 个位
+    shuimian_status = bool(data2 & 0x80)            # 水面状态
+    autofenweideng_status = bool(data2 & 0x40)      # 自动氛围灯状态
+    fenweideng_status = bool(data2 & 0x20)          # 氛围灯状态
+    huxifenweideng_status = bool(data2 & 0x10)      # 呼吸氛围灯状态
+
+    # data3 的位
+    runbi_status = bool(data3 & 0x80)               # 润壁状态
+    guanautochong_status = bool(data3 & 0x40)       # 罐自动冲状态
+    xunizhuozuo_status = bool(data3 & 0x20)         # 虚拟坐座状态
+    dachong_mode = data3 & 0x0F                     # 大冲水模式
+
     return {
-        "flush_enabled": bool(data1 & 0x80),
-        "seat_enabled": bool(data1 & 0x40),
-        "bubble_enabled": bool(data1 & 0x20),
-        "air_enabled": bool(data1 & 0x10),
-        "radar_enabled": bool(data1 & 0x08),
-        "voice_enabled": bool(data1 & 0x04),
-        "sensors_enabled": bool(data1 & 0x02),
-        "lights_enabled": bool(data1 & 0x01),
+        "flush_enabled": chongshui_status,
+        "seat_enabled": zhuozuo_status,
+        "bubble_enabled": paopao_status,
+        "air_enabled": kongqi_status,
+        "radar_enabled": leida_status,
+        "voice_enabled": yuyin_status,
+        "sensors_enabled": jiaogan_status,
+        "lights_enabled": jieneng_status,
+        # 新增字段
+        "water_surface_enabled": shuimian_status,
+        "auto_ambient_light_enabled": autofenweideng_status,
+        "ambient_light_enabled": fenweideng_status,
+        "breathing_light_enabled": huxifenweideng_status,
+        "runbi_enabled": runbi_status,
+        "auto_flush_enabled": guanautochong_status,
+        "virtual_seat_enabled": xunizhuozuo_status,
+        "big_flush_mode": dachong_mode,
     }
 
 
@@ -328,22 +373,37 @@ def decode_type_05_packet(data1: int, data2: int, data3: int) -> dict:
     """解码 Type 05 数据包: 冲水参数
 
     字节布局:
-    - data1: 气泡等级
-    - data2: 大冲水时间（秒）
-    - data3: 小冲水时间（秒）
+    - data1: [大冲模式(4位), 气泡用量档位(4位)]
+    - data2: [大冲不水(4位), 大冲下冲(4位)]
+    - data3: [小冲不水(4位), 小冲下冲(4位)]
 
     Args:
-        data1: 气泡等级值
-        data2: 大冲水时间（秒）
-        data3: 小冲水时间（秒）
+        data1: 包含气泡用量和大冲模式的第一个数据字节
+        data2: 包含大冲水子模式的第二个数据字节
+        data3: 包含小冲水子模式的第三个数据字节
 
     Returns:
         包含解码冲水参数的字典
     """
+    # data1 解析
+    bubble_level = (data1 >> 4) & 0x0F      # 气泡用量档位 (高4位)
+    dachong_shangchong = data1 & 0x0F       # 大冲上冲模式 (低4位)
+
+    # data2 解析
+    dachong_xiachong = (data2 >> 4) & 0x0F  # 大冲下冲 (高4位)
+    dachong_bushui = data2 & 0x0F           # 大冲不水 (低4位)
+
+    # data3 解析
+    xiaochong_xiachong = (data3 >> 4) & 0x0F  # 小冲下冲 (高4位)
+    xiaochong_bushui = data3 & 0x0F            # 小冲不水 (低4位)
+
     return {
-        "bubble_level": data1,
-        "big_flush_timing": data2,
-        "small_flush_timing": data3,
+        "bubble_level": bubble_level,
+        "big_flush_timing": dachong_shangchong,
+        "big_flush_down": dachong_xiachong,
+        "big_flush_no_water": dachong_bushui,
+        "small_flush_timing": xiaochong_xiachong,
+        "small_flush_no_water": xiaochong_bushui,
     }
 
 

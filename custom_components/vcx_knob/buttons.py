@@ -39,6 +39,7 @@ class VCXKnobButtonDescription:
 
 
 BUTTON_DESCRIPTIONS: tuple[VCXKnobButtonDescription, ...] = (
+    # 冲水按钮
     VCXKnobButtonDescription(
         key="big_flush",
         name="大冲水",
@@ -51,11 +52,76 @@ BUTTON_DESCRIPTIONS: tuple[VCXKnobButtonDescription, ...] = (
         icon="mdi:toilet",
         command=Command.XIAOCHONG,
     ),
+    # 清洗按钮
+    VCXKnobButtonDescription(
+        key="feminine_wash",
+        name="妇洗",
+        icon="mdi:human-female",
+        command=Command.FUXI,
+    ),
+    VCXKnobButtonDescription(
+        key="rear_wash",
+        name="臀洗",
+        icon="mdi:human-male",
+        command=Command.TUNXI,
+    ),
+    VCXKnobButtonDescription(
+        key="massage",
+        name="按摩",
+        icon="mdi:vibrate",
+        command=Command.ANMO,
+    ),
+    # 控制按钮
+    VCXKnobButtonDescription(
+        key="stop",
+        name="停止",
+        icon="mdi:stop",
+        command=Command.STOP,
+    ),
+    VCXKnobButtonDescription(
+        key="dry",
+        name="烘干",
+        icon="mdi:tumble-dryer",
+        command=Command.HONGGAN,
+    ),
+    # 机械控制按钮
+    VCXKnobButtonDescription(
+        key="open_lid",
+        name="翻盖",
+        icon="mdi:arrow-up-bold-box",
+        command=Command.FANGAI,
+    ),
+    VCXKnobButtonDescription(
+        key="open_seat",
+        name="翻圈",
+        icon="mdi:chair-rolling",
+        command=Command.FANQUAN,
+    ),
+    VCXKnobButtonDescription(
+        key="close",
+        name="关闭",
+        icon="mdi:arrow-down-bold-box",
+        command=Command.JIENENG,
+    ),
+    # 其他功能按钮
+    VCXKnobButtonDescription(
+        key="runbi",
+        name="润壁",
+        icon="mdi:water-pump",
+        command=Command.RUNBI,
+    ),
+    VCXKnobButtonDescription(
+        key="self_clean",
+        name="自洁",
+        icon="mdi:sparkles",
+        command=Command.ZIJIE,
+    ),
+    # 系统按钮
     VCXKnobButtonDescription(
         key="factory_reset",
         name="恢复出厂设置",
         icon="mdi:restore",
-        command=Command.FUYUAN,
+        command=Command.HUIFUCHUCHANG,
         entity_category="config",
     ),
 )

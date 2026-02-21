@@ -74,8 +74,10 @@ from .const import (
     BLE_SERVICE_UUID,
     BLE_WRITE_CHARACTERISTIC_UUID,
     BLE_DEVICE_NAME_FILTER,
+    CONF_AUTO_CONNECT,
     CONF_DEVICE_ADDRESS,
     CONF_DEVICE_NAME,
+    DEFAULT_AUTO_CONNECT,
     DEFAULT_CONNECTION_TIMEOUT,
     DEFAULT_SCAN_TIMEOUT,
     DEFAULT_STATUS_POLL_INTERVAL,
@@ -443,12 +445,31 @@ class VCXKnobCoordinator(DataUpdateCoordinator[dict]):
         """获取设备名称"""
         return self._config_entry.data.get(CONF_DEVICE_NAME, "VCX-Knob")
 
+    @property
+    def auto_connect(self) -> bool:
+        """获取是否自动连接配置"""
+        return self._config_entry.data.get(CONF_AUTO_CONNECT, DEFAULT_AUTO_CONNECT)
+
     async def _async_initial_connect(self) -> None:
-        """执行与设备的初始连接"""
+        """执行与设备的初始连接
+
+        根据 auto_connect 配置决定是否立即连接：
+        - True: 自动连接设备（默认）
+        - False: 仅扫描模式，不自动连接
+        """
+        if not self.auto_connect:
+            _LOGGER.info(
+                "自动连接已禁用，设备将保持扫描模式。"
+                "请使用服务或手动触发连接。"
+            )
+            self._device_state["connected"] = False
+            return
+
         try:
             await self._client.connect()
             self._device_state["connected"] = True
             self._device_state["rssi"] = self._client.rssi
+            _LOGGER.info("初始连接成功")
         except VCXKnobConnectionError as err:
             _LOGGER.error("初始连接失败: %s", err)
             self._device_state["connected"] = False
@@ -457,10 +478,9 @@ class VCXKnobCoordinator(DataUpdateCoordinator[dict]):
         """通过查询状态更新设备状态
 
         此方法:
-        1. 确保已连接
-        2. 发送状态查询命令
-        3. 等待状态包
-        4. 解析并合并状态
+        1. 检查 auto_connect 配置
+        2. 如果启用自动连接，确保已连接并查询状态
+        3. 如果禁用自动连接，仅返回当前状态（扫描模式）
 
         Returns:
             当前设备状态字典
@@ -468,6 +488,12 @@ class VCXKnobCoordinator(DataUpdateCoordinator[dict]):
         Raises:
             UpdateFailed: 如果更新失败
         """
+        # 如果禁用自动连接，处于扫描模式，不进行状态查询
+        if not self.auto_connect:
+            # 扫描模式下，仅更新连接状态为 False
+            self._device_state["connected"] = False
+            return self._device_state.copy()
+
         try:
             # 确保我们已连接
             if not self._client.is_connected:
@@ -480,8 +506,8 @@ class VCXKnobCoordinator(DataUpdateCoordinator[dict]):
             # 清空缓冲区以接收新状态
             self._client.clear_status_buffer()
 
-            # 发送状态查询命令 (ZHUANGTAI = "00")
-            await self._client.send_command("00", 0, 0, 0)
+            # 发送状态查询命令 (ZHUANGTAI = "FF")
+            await self._client.send_command("FF", 0, 0, 0)
 
             # 等待状态包（所有 6 种类型）
             await self._async_wait_for_status_packets()
