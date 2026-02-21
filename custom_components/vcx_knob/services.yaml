@@ -1,0 +1,44 @@
+send_command:
+  name: 发送命令
+  description: 向 VCX-Knob 设备发送原始命令
+  fields:
+    device_id:
+      name: 设备
+      description: 要控制的 VCX-Knob 设备
+      required: true
+      selector:
+        device:
+          integration: vcx_knob
+    command:
+      name: 命令
+      description: 要发送的命令代码（例如 "07" 表示大冲水）
+      required: true
+      selector:
+        text:
+    d1:
+      name: 数据字节 1
+      description: 第一个数据字节 (0-255)
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 255
+    d2:
+      name: 数据字节 2
+      description: 第二个数据字节 (0-255)
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 255
+    d3:
+      name: 数据字节 3
+      description: 第三个数据字节 (0-255)
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 255

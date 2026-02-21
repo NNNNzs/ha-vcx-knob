@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup VCX-Knob Smart Toilet",
+        "description": "Scan for nearby VCX-Knob devices via Bluetooth."
+      },
+      "scan": {
+        "title": "Scanning for Devices",
+        "description": "Scanning for {device_name} devices nearby. Make sure your device is powered on and within range."
+      },
+      "select_device": {
+        "title": "Select Device",
+        "description": "Select the VCX-Knob device you want to add."
+      },
+      "confirm": {
+        "title": "Confirm Device",
+        "description": "Found **{device_name}** at **{device_address}** with signal strength **{rssi} dBm**.\n\nYou can customize the device name below."
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the device. Make sure it is powered on and within range.",
+      "no_devices_found": "No {device_name} devices found. Make sure the device is powered on and within Bluetooth range.",
+      "scan_failed": "Bluetooth scan failed. Make sure Bluetooth is enabled on your Home Assistant system."
+    },
+    "abort": {
+      "already_configured": "This device has already been configured.",
+      "no_devices_found": "No {device_name} devices found. Make sure the device is powered on and within Bluetooth range."
+    }
+  }
+}

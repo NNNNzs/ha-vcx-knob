@@ -1,0 +1,223 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup VCX-Knob Smart Toilet",
+        "description": "Scan for nearby VCX-Knob devices via Bluetooth.",
+        "data": {}
+      },
+      "scan": {
+        "title": "Scanning for Devices",
+        "description": "Scanning for {device_name} devices nearby. Make sure your device is powered on and within range.",
+        "data": {
+          "device_address": "Discovered Devices"
+        }
+      },
+      "select_device": {
+        "title": "Select Device",
+        "description": "Select the VCX-Knob device you want to add.",
+        "data": {
+          "device_address": "Discovered Devices"
+        }
+      },
+      "confirm": {
+        "title": "Confirm Device",
+        "description": "Found **{device_name}** at **{device_address}** with signal strength **{rssi} dBm**.\n\nYou can customize the device name below.",
+        "data": {
+          "device_name": "Device Name"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the device. Make sure it is powered on and within range.",
+      "no_devices_found": "No {device_name} devices found. Make sure the device is powered on and within Bluetooth range.",
+      "scan_failed": "Bluetooth scan failed. Make sure Bluetooth is enabled on your Home Assistant system."
+    },
+    "abort": {
+      "already_configured": "This device has already been configured.",
+      "no_devices_found": "No {device_name} devices found. Make sure the device is powered on and within Bluetooth range."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "rssi": {
+        "name": "Signal Strength"
+      },
+      "air_percentage": {
+        "name": "Air Percentage"
+      },
+      "water_percentage": {
+        "name": "Water Percentage"
+      },
+      "radar_level": {
+        "name": "Radar Level"
+      },
+      "cover_close_time": {
+        "name": "Cover Close Time"
+      },
+      "cover_flip_intensity": {
+        "name": "Cover Flip Intensity"
+      },
+      "ring_flip_intensity": {
+        "name": "Ring Flip Intensity"
+      },
+      "cover_close_intensity": {
+        "name": "Cover Close Intensity"
+      },
+      "bubble_level": {
+        "name": "Bubble Level"
+      },
+      "big_flush_timing": {
+        "name": "Big Flush Timing"
+      },
+      "small_flush_timing": {
+        "name": "Small Flush Timing"
+      },
+      "foot_sensor_distance": {
+        "name": "Foot Sensor Distance"
+      },
+      "sterilization_time": {
+        "name": "Sterilization Time"
+      }
+    },
+    "switch": {
+      "flush": {
+        "name": "Flush"
+      },
+      "seat": {
+        "name": "Seat"
+      },
+      "bubble": {
+        "name": "Bubble"
+      },
+      "air": {
+        "name": "Air Dry"
+      },
+      "radar": {
+        "name": "Radar"
+      },
+      "voice": {
+        "name": "Voice Control"
+      },
+      "sensor": {
+        "name": "Sensors"
+      },
+      "auto_mode": {
+        "name": "Auto Mode"
+      },
+      "night_light": {
+        "name": "Night Light"
+      },
+      "foot_sensor": {
+        "name": "Foot Sensor"
+      },
+      "sterilization": {
+        "name": "Sterilization"
+      }
+    },
+    "button": {
+      "big_flush": {
+        "name": "Big Flush"
+      },
+      "small_flush": {
+        "name": "Small Flush"
+      },
+      "factory_reset": {
+        "name": "Factory Reset"
+      }
+    },
+    "select": {
+      "water_temperature": {
+        "name": "Water Temperature",
+        "state": {
+          "off": "Off",
+          "34": "34°C",
+          "37": "37°C",
+          "40": "40°C"
+        }
+      },
+      "seat_temperature": {
+        "name": "Seat Temperature",
+        "state": {
+          "off": "Off",
+          "34": "34°C",
+          "37": "37°C",
+          "40": "40°C"
+        }
+      },
+      "wind_temperature": {
+        "name": "Wind Temperature",
+        "state": {
+          "off": "Off",
+          "40": "40°C",
+          "45": "45°C",
+          "50": "50°C"
+        }
+      },
+      "water_level": {
+        "name": "Water Level",
+        "state": {
+          "off": "Off",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "air_level": {
+        "name": "Air Level",
+        "state": {
+          "off": "Off",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "light_brightness": {
+        "name": "Light Brightness",
+        "state": {
+          "off": "Off",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "radar_sensitivity": {
+        "name": "Radar Sensitivity",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      }
+    },
+    "binary_sensor": {
+      "connection": {
+        "name": "Connected"
+      }
+    }
+  },
+  "services": {
+    "send_command": {
+      "name": "Send Command",
+      "description": "Send a raw command to the VCX-Knob device.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "The command code to send (e.g., \"07\" for big flush)"
+        },
+        "d1": {
+          "name": "Data Byte 1",
+          "description": "First data byte (0-255)"
+        },
+        "d2": {
+          "name": "Data Byte 2",
+          "description": "Second data byte (0-255)"
+        },
+        "d3": {
+          "name": "Data Byte 3",
+          "description": "Third data byte (0-255)"
+        }
+      }
+    }
+  }
+}

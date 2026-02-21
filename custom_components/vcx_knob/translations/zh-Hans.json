@@ -1,0 +1,213 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "设置 VCX-Knob 智能马桶",
+        "description": "通过蓝牙扫描附近的 VCX-Knob 设备。"
+      },
+      "scan": {
+        "title": "正在扫描设备",
+        "description": "正在扫描附近的 {device_name} 设备。请确保设备已开机且在范围内。"
+      },
+      "select_device": {
+        "title": "选择设备",
+        "description": "选择要添加的 VCX-Knob 设备。"
+      },
+      "confirm": {
+        "title": "确认设备",
+        "description": "发现 **{device_name}**，地址 **{device_address}**，信号强度 **{rssi} dBm**。\n\n您可以在下方自定义设备名称。"
+      }
+    },
+    "error": {
+      "cannot_connect": "无法连接到设备。请确保设备已开机且在范围内。",
+      "no_devices_found": "未发现 {device_name} 设备。请确保设备已开机且在蓝牙范围内。",
+      "scan_failed": "蓝牙扫描失败。请确保 Home Assistant 系统上的蓝牙已启用。"
+    },
+    "abort": {
+      "already_configured": "该设备已经配置过了。",
+      "no_devices_found": "未发现 {device_name} 设备。请确保设备已开机且在蓝牙范围内。"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "rssi": {
+        "name": "信号强度"
+      },
+      "air_percentage": {
+        "name": "热风百分比"
+      },
+      "water_percentage": {
+        "name": "水量百分比"
+      },
+      "radar_level": {
+        "name": "雷达等级"
+      },
+      "cover_close_time": {
+        "name": "盖板关闭时间"
+      },
+      "cover_flip_intensity": {
+        "name": "盖板翻转强度"
+      },
+      "ring_flip_intensity": {
+        "name": "座圈翻转强度"
+      },
+      "cover_close_intensity": {
+        "name": "盖板关闭强度"
+      },
+      "bubble_level": {
+        "name": "气泡等级"
+      },
+      "big_flush_timing": {
+        "name": "大冲水时间"
+      },
+      "small_flush_timing": {
+        "name": "小冲水时间"
+      },
+      "foot_sensor_distance": {
+        "name": "脚感应距离"
+      },
+      "sterilization_time": {
+        "name": "杀菌时间"
+      }
+    },
+    "switch": {
+      "flush": {
+        "name": "冲水"
+      },
+      "seat": {
+        "name": "座圈"
+      },
+      "bubble": {
+        "name": "气泡"
+      },
+      "air": {
+        "name": "热风"
+      },
+      "radar": {
+        "name": "雷达"
+      },
+      "voice": {
+        "name": "语音控制"
+      },
+      "sensor": {
+        "name": "传感器"
+      },
+      "auto_mode": {
+        "name": "自动模式"
+      },
+      "night_light": {
+        "name": "夜灯"
+      },
+      "foot_sensor": {
+        "name": "脚感应"
+      },
+      "sterilization": {
+        "name": "杀菌"
+      }
+    },
+    "button": {
+      "big_flush": {
+        "name": "大冲水"
+      },
+      "small_flush": {
+        "name": "小冲水"
+      },
+      "factory_reset": {
+        "name": "恢复出厂设置"
+      }
+    },
+    "select": {
+      "water_temperature": {
+        "name": "水温",
+        "state": {
+          "off": "关闭",
+          "34": "34°C",
+          "37": "37°C",
+          "40": "40°C"
+        }
+      },
+      "seat_temperature": {
+        "name": "座温",
+        "state": {
+          "off": "关闭",
+          "34": "34°C",
+          "37": "37°C",
+          "40": "40°C"
+        }
+      },
+      "wind_temperature": {
+        "name": "风温",
+        "state": {
+          "off": "关闭",
+          "40": "40°C",
+          "45": "45°C",
+          "50": "50°C"
+        }
+      },
+      "water_level": {
+        "name": "水量",
+        "state": {
+          "off": "关闭",
+          "low": "低",
+          "medium": "中",
+          "high": "高"
+        }
+      },
+      "air_level": {
+        "name": "热风档位",
+        "state": {
+          "off": "关闭",
+          "low": "低",
+          "medium": "中",
+          "high": "高"
+        }
+      },
+      "light_brightness": {
+        "name": "灯光亮度",
+        "state": {
+          "off": "关闭",
+          "low": "低",
+          "medium": "中",
+          "high": "高"
+        }
+      },
+      "radar_sensitivity": {
+        "name": "雷达灵敏度",
+        "state": {
+          "low": "低",
+          "medium": "中",
+          "high": "高"
+        }
+      }
+    },
+    "binary_sensor": {
+      "connection": {
+        "name": "已连接"
+      }
+    }
+  },
+  "services": {
+    "send_command": {
+      "name": "发送命令",
+      "description": "向 VCX-Knob 设备发送原始命令。",
+      "fields": {
+        "command": {
+          "name": "命令",
+          "description": "要发送的命令代码（例如 \"07\" 表示大冲水）"
+        },
+        "d1": {
+          "name": "数据字节 1",
+          "description": "第一个数据字节 (0-255)"
+        },
+        "d2": {
+          "name": "数据字节 2",
+          "description": "第二个数据字节 (0-255)"
+        },
+        "d3": {
+          "name": "数据字节 3",
+          "description": "第三个数据字节 (0-255)"
+        }
+      }
+    }
+  }
+}
