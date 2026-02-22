@@ -1,12 +1,12 @@
 {
   "domain": "vcx_knob",
   "name": "VCX-Knob Smart Toilet",
-  "codeowners": ["@your-username"],
+  "codeowners": ["@NNNNzs"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/your-username/ha-vcx-knob",
+  "documentation": "https://github.com/NNNNzs/ha-vcx-knob",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/your-username/ha-vcx-knob/issues",
+  "issue_tracker": "https://github.com/NNNNzs/ha-vcx-knob/issues",
   "requirements": ["bleak>=0.21.0"],
   "version": "1.0.0"
 }
