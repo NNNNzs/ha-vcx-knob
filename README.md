@@ -227,8 +227,8 @@ MIT 许可证 - 详见 [LICENSE](LICENSE)
 
 ## 支持
 
-- **问题**: [GitHub Issues](https://github.com/your-username/ha-vcx-knob/issues)
-- **讨论**: [GitHub Discussions](https://github.com/your-username/ha-vcx-knob/discussions)
+- **问题**: [GitHub Issues](https://github.com/NNNNzs/ha-vcx-knob/issues)
+- **讨论**: [GitHub Discussions](https://github.com/NNNNzs/ha-vcx-knob/discussions)
 
 ## 致谢
 

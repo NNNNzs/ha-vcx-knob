@@ -1,8 +1,5 @@
 {
   "name": "VCX-Knob Smart Toilet",
   "render_readme": true,
-  "homeassistant": "2023.11.0",
-  "zip_release": true,
-  "filename": "vcx_knob.zip",
-  "persistent_directory": "custom_components"
+  "homeassistant": "2023.11.0"
 }
