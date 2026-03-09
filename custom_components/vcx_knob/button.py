@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -150,7 +150,7 @@ class VCXKnobButton(ButtonEntity):
         self._coordinator = coordinator
         self._description = description
 
-        self._attr_has_entity_name = True
+        self._attr_has_entity_name = False
         self._attr_unique_id = f"{coordinator.device_address}_{description.key}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, coordinator.device_address)},
@@ -163,7 +163,39 @@ class VCXKnobButton(ButtonEntity):
     @property
     def available(self) -> bool:
         """返回实体是否可用"""
-        return self._coordinator.data.get("connected", False)
+        # 按钮在客户端存在就可用
+        # 由于 BLE 连接状态检测不稳定，我们假设如果客户端对象存在就可用
+        try:
+            # 检查 bleak 客户端对象是否存在
+            client = self._coordinator.client._client
+            if client is None:
+                return False
+
+            # 尝试检查连接状态
+            try:
+                is_connected = client.is_connected
+                _LOGGER.debug(
+                    "按钮 %s 可用性: is_connected=%s",
+                    self.entity_description.key,
+                    is_connected
+                )
+                return is_connected
+            except Exception as e:
+                _LOGGER.warning(
+                    "检查按钮 %s 连接状态时出错: %s，假设可用",
+                    self.entity_description.key,
+                    e
+                )
+                # 如果无法检查连接状态，假设可用（让用户尝试）
+                return True
+        except Exception as e:
+            _LOGGER.error("检查按钮可用性时出错: %s", e)
+            return False
+
+    @property
+    def name(self) -> str:
+        """返回实体名称"""
+        return self._description.name
 
     @property
     def icon(self) -> str | None:

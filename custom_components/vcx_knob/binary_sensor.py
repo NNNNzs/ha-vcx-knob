@@ -9,10 +9,11 @@ from dataclasses import dataclass
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
+    EntityCategory,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -28,9 +29,15 @@ _LOGGER = logging.getLogger(__name__)
 BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="connection",
-        name="已连接",
+        name="蓝牙连接",
         device_class="connectivity",
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BinarySensorEntityDescription(
+        key="paired",
+        name="配对状态",
+        device_class="connectivity",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -58,7 +65,7 @@ class VCXKnobBinarySensor(BinarySensorEntity):
         self._coordinator = coordinator
         self.entity_description = description
 
-        self._attr_has_entity_name = True
+        self._attr_has_entity_name = False
         self._attr_unique_id = f"{coordinator.device_address}_{description.key}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, coordinator.device_address)},
@@ -83,8 +90,13 @@ class VCXKnobBinarySensor(BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """如果二进制传感器打开则返回 True"""
+        data = self._coordinator.data
+        if data is None:
+            return False
         if self.entity_description.key == "connection":
-            return self._coordinator.data.get("connected", False)
+            return data.get("connected", False)
+        if self.entity_description.key == "paired":
+            return data.get("paired", False)
         return False
 
 

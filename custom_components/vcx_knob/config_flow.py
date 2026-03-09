@@ -21,6 +21,8 @@ from homeassistant import config_entries
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
+    BluetoothChange,
+    BluetoothScanningMode,
     async_get_scanner,
     async_register_callback,
     BluetoothCallbackMatcher,
@@ -115,7 +117,8 @@ class VCXKnobConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             流程结果
         """
         if user_input is not None:
-            return await self.async_step_scan()
+            # 直接执行扫描
+            return await self._async_scan_and_proceed()
 
         return self.async_show_form(
             step_id="user",
@@ -124,6 +127,36 @@ class VCXKnobConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "device_name": BLE_DEVICE_NAME_FILTER,
             },
         )
+
+    async def _async_scan_and_proceed(self) -> FlowResult:
+        """执行扫描并跳转到相应步骤
+
+        Returns:
+            流程结果
+        """
+        # 清空之前发现的设备
+        self._discovered_devices.clear()
+
+        # 开始扫描
+        _LOGGER.info("正在扫描附近的 %s 设备...", BLE_DEVICE_NAME_FILTER)
+
+        try:
+            await self._async_scan_for_devices()
+        except Exception as err:
+            _LOGGER.error("扫描失败: %s", err)
+            return self.async_abort(reason="scan_failed")
+
+        # 检查是否发现任何设备
+        if not self._discovered_devices:
+            return self.async_abort(reason="no_devices_found")
+
+        # 如果只发现一个设备，自动选择它，然后进入配对步骤
+        if len(self._discovered_devices) == 1:
+            self._selected_device = next(iter(self._discovered_devices.values()))
+            return await self.async_step_pair()
+
+        # 显示设备选择
+        return await self.async_step_select_device()
 
     async def async_step_scan(
         self,
@@ -163,10 +196,10 @@ class VCXKnobConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        # 如果只发现一个设备，自动选择它
+        # 如果只发现一个设备，自动选择它，然后进入配对步骤
         if len(self._discovered_devices) == 1:
             self._selected_device = next(iter(self._discovered_devices.values()))
-            return await self.async_step_confirm()
+            return await self.async_step_pair()
 
         # 显示设备选择
         return await self.async_step_select_device()
@@ -188,7 +221,7 @@ class VCXKnobConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         def _service_info_callback(
             service_info: BluetoothServiceInfo,
-            _change: bluetooth.Change,
+            _change: BluetoothChange,
         ) -> None:
             """BLE 扫描器回调"""
             if service_info.name and BLE_DEVICE_NAME_FILTER in service_info.name:
@@ -209,6 +242,7 @@ class VCXKnobConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass,
             _service_info_callback,
             BluetoothCallbackMatcher(connectable=True),
+            BluetoothScanningMode.ACTIVE,
         )
 
         try:
@@ -254,7 +288,7 @@ class VCXKnobConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(self._selected_device.address)
             self._abort_if_unique_id_configured()
 
-            return await self.async_step_confirm()
+            return await self.async_step_pair()
 
         # 构建选择模式
         devices_dict = {
@@ -271,6 +305,125 @@ class VCXKnobConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
             errors=errors,
         )
+
+    async def async_step_pair(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """处理配对步骤
+
+        此步骤引导用户配对 VCX-Knob 设备。
+        配对于控制设备是必需的，否则按钮将显示为灰色。
+
+        注意：某些 BLE 设备可能不支持标准蓝牙配对，
+        这种情况下可以跳过配对直接使用。
+
+        Args:
+            user_input: 用户输入
+
+        Returns:
+            流程结果
+        """
+        device_address = self._selected_device.address
+
+        # 检查是否已配对
+        is_paired = await self._check_device_paired(device_address)
+
+        if is_paired:
+            _LOGGER.info("设备 %s 已配对，跳过配对步骤", device_address)
+            return await self.async_step_confirm()
+
+        # 如果用户确认，尝试配对
+        if user_input is not None:
+            try:
+                await self._async_pair_device(device_address)
+                # 配对成功，继续到确认步骤
+                return await self.async_step_confirm()
+            except Exception as err:
+                _LOGGER.warning("配对失败: %s，但继续设置流程", err)
+                # 即使配对失败也继续，因为某些设备可能不需要配对
+                return await self.async_step_confirm()
+
+        # 显示配对说明和确认按钮
+        return self.async_show_form(
+            step_id="pair",
+            data_schema=vol.Schema({}),
+            description_placeholders={
+                "device_name": self._selected_device.name,
+                "device_address": device_address,
+                "rssi": self._selected_device.rssi,
+            },
+        )
+
+    async def _check_device_paired(self, device_address: str) -> bool:
+        """检查设备是否已配对
+
+        Args:
+            device_address: 设备 MAC 地址
+
+        Returns:
+            如果已配对返回 True
+        """
+        try:
+            process = await asyncio.create_subprocess_exec(
+                "bluetoothctl",
+                "info",
+                device_address,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+
+            stdout, _ = await process.communicate()
+            result = stdout.decode()
+
+            # 检查是否已配对
+            is_paired = "Paired: yes" in result
+
+            _LOGGER.debug("设备 %s 配对状态: %s", device_address, is_paired)
+            return is_paired
+
+        except Exception as err:
+            _LOGGER.error("检查配对状态失败: %s", err)
+            return False
+
+    async def _async_pair_device(self, device_address: str) -> None:
+        """执行蓝牙配对
+
+        Args:
+            device_address: 设备 MAC 地址
+
+        Raises:
+            VCXKnobConnectionError: 如果配对失败
+        """
+        _LOGGER.info("正在配对设备: %s", device_address)
+
+        # 配对
+        pair_process = await asyncio.create_subprocess_exec(
+            "bluetoothctl",
+            "pair",
+            device_address,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+
+        stdout, stderr = await pair_process.communicate()
+        result = stdout.decode() + stderr.decode()
+
+        if "Pairing successful" in result or "Already paired" in result:
+            _LOGGER.info("蓝牙配对成功: %s", device_address)
+
+            # 信任设备
+            trust_process = await asyncio.create_subprocess_exec(
+                "bluetoothctl",
+                "trust",
+                device_address,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            await trust_process.communicate()
+
+        else:
+            raise Exception(f"配对失败: {result}")
 
     async def async_step_confirm(
         self,
@@ -422,8 +575,8 @@ class VCXKnobConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             rssi=discovery_info.rssi,
         )
 
-        # 显示确认
-        return await self.async_step_confirm()
+        # 进入配对步骤
+        return await self.async_step_pair()
 
 
 # ============================================================================

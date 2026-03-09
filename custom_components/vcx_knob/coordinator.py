@@ -8,7 +8,9 @@ Home Assistant 实体的状态管理。
 该协调器的数据包含来自所有状态包的合并状态:
 {
     "connected": bool,
+    "paired": bool,
     "rssi": int | None,
+    "device_address": str,
     # Type 01: 基础状态
     "flush_enabled": bool,
     "seat_enabled": bool,
@@ -52,6 +54,7 @@ Home Assistant 实体的状态管理。
 import asyncio
 import logging
 from collections.abc import Callable
+from datetime import timedelta
 from typing import Final
 
 import voluptuous as vol
@@ -59,9 +62,8 @@ from bleak import BleakClient, BleakError
 from bleak.exc import BleakDBusError
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
-    BLEAK_SCANNER,
     BluetoothServiceInfo,
-    MonotonicTime,
+    async_get_scanner,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -164,11 +166,19 @@ class VCXKnobBLEClient:
         """
         self._address = address
         self._name = name
-        self._client = BleakClient(address)
+
+        def _disconnected_callback(client: BleakClient) -> None:
+            _LOGGER.warning("设备 %s 已断开连接", address)
+            self._is_connected = False
+
+        self._client = BleakClient(
+            address,
+            disconnected_callback=_disconnected_callback,
+        )
         self._notification_callback = notification_callback
         self._status_buffer: list[str] = []
         self._is_connected = False
-        self._disconnect_time: MonotonicTime | None = None
+        self._disconnect_time: float | None = None
         self._lock = asyncio.Lock()
 
     @property
@@ -327,10 +337,12 @@ class VCXKnobBLEClient:
 
         try:
             async with asyncio.timeout(10):
+                # VCX-Knob 设备使用 write-without-response
+                # 参考 Node.js 实现，特征值属性为 'write-without-response'
                 await self._client.write_gatt_char(
                     BLE_WRITE_CHARACTERISTIC_UUID,
                     command,
-                    response=True,
+                    response=False,
                 )
         except asyncio.TimeoutError as err:
             raise VCXKnobConnectionError(
@@ -412,7 +424,9 @@ class VCXKnobCoordinator(DataUpdateCoordinator[dict]):
 
         self._device_state: dict[str, bool | int | str | None] = {
             "connected": False,
+            "paired": False,
             "rssi": None,
+            "device_address": self.device_address,  # 添加设备地址到状态
         }
 
         # 监听 Home Assistant 关闭事件
@@ -424,11 +438,14 @@ class VCXKnobCoordinator(DataUpdateCoordinator[dict]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=self._poll_interval,
+            update_interval=timedelta(seconds=self._poll_interval),
         )
 
         # 开始连接
         hass.async_create_task(self._async_initial_connect())
+
+        # 检查配对状态
+        hass.async_create_task(self._async_check_paired_status())
 
     @property
     def client(self) -> VCXKnobBLEClient:
@@ -449,6 +466,36 @@ class VCXKnobCoordinator(DataUpdateCoordinator[dict]):
     def auto_connect(self) -> bool:
         """获取是否自动连接配置"""
         return self._config_entry.data.get(CONF_AUTO_CONNECT, DEFAULT_AUTO_CONNECT)
+
+    async def _async_check_paired_status(self) -> None:
+        """检查蓝牙设备配对状态"""
+        try:
+            process = await asyncio.create_subprocess_exec(
+                "bluetoothctl",
+                "info",
+                self.device_address,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=5.0)
+            result = stdout.decode() + stderr.decode()
+
+            # 解析配对状态
+            paired = "Paired: yes" in result
+            self._device_state["paired"] = paired
+            _LOGGER.debug("设备 %s 配对状态: %s", self.device_address, paired)
+
+        except asyncio.TimeoutError:
+            _LOGGER.warning("检查配对状态超时: %s", self.device_address)
+            self._device_state["paired"] = False
+        except FileNotFoundError:
+            # 蓝牙命令不可用（可能不在 Linux 上）
+            _LOGGER.debug("bluetoothctl 不可用，无法检查配对状态")
+            self._device_state["paired"] = True  # 假设已配对
+        except Exception as err:
+            _LOGGER.warning("检查配对状态时出错: %s", err)
+            self._device_state["paired"] = False
 
     async def _async_initial_connect(self) -> None:
         """执行与设备的初始连接
@@ -674,9 +721,8 @@ async def async_scan_for_device(
     )
 
     try:
-        # 如果尚未开始扫描，则启动
-        if not hass.data.get(BLEAK_SCANNER):
-            scanner = bluetooth.async_get_scanner(hass)
+        # 确保扫描器正在运行
+        scanner = async_get_scanner(hass)
 
         # 等待设备发现
         await asyncio.sleep(timeout)

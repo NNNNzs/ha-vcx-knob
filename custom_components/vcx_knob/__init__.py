@@ -14,6 +14,7 @@
     - 按钮实体，用于一次性操作（大冲水、小冲水、恢复出厂设置）
     - 传感器实体，用于监控（信号强度、百分比、时间）
     - 连接状态的二进制传感器
+    - 蓝牙配对服务（通过开发者工具调用）
 
 设备支持:
     - VCX-Knob 智能马桶
@@ -54,10 +55,33 @@ PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
 ]
 
+# 用于跟踪配置条目数量，管理服务生命周期
+_DATA_ENTRY_COUNT = "entry_count"
+
 
 # ============================================================================
 # 设置函数
 # ============================================================================
+
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """设置 VCX-Knob 集成
+
+    Args:
+        hass: Home Assistant 实例
+        config: 配置字典
+
+    Returns:
+        如果设置成功返回 True
+    """
+    print(f"DEBUG: async_setup called for {DOMAIN}")
+    _LOGGER.info("VCX-Knob async_setup called")
+    # 初始化 entry 计数器
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][_DATA_ENTRY_COUNT] = 0
+    print(f"DEBUG: entry_count initialized to 0")
+    _LOGGER.info("entry_count initialized to 0")
+    return True
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """从配置条目设置 VCX-Knob
@@ -72,11 +96,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     Returns:
         如果设置成功返回 True，否则返回 False
     """
+    print(f"DEBUG: VCX-Knob async_setup_entry called for {entry.title}")
     _LOGGER.info("正在设置 VCX-Knob 集成: %s", entry.title)
 
     # 从配置条目获取设备信息
     device_address = entry.data.get(CONF_DEVICE_ADDRESS) or entry.data.get(CONF_ADDRESS)
     device_name = entry.data.get(CONF_DEVICE_NAME) or entry.data.get(CONF_NAME, "VCX-Knob")
+
+    print(f"DEBUG: device_address={device_address}, device_name={device_name}")
+    _LOGGER.info("设备地址: %s, 设备名称: %s", device_address, device_name)
+
+    if not device_address:
+        _LOGGER.error("配置条目中没有设备地址")
+        return False
+
+    # 增加条目计数
+    hass.data[DOMAIN][_DATA_ENTRY_COUNT] = hass.data[DOMAIN].get(_DATA_ENTRY_COUNT, 0) + 1
+    entry_count = hass.data[DOMAIN][_DATA_ENTRY_COUNT]
+    print(f"DEBUG: entry_count={entry_count}")
+    _LOGGER.info("配置条目计数: %d (设备: %s)", entry_count, device_name)
+
+    # 如果这是第一个条目，注册服务
+    if entry_count == 1:
+        print(f"DEBUG: Calling _async_setup_bluetooth_services")
+        _LOGGER.info("这是第一个配置条目，正在注册蓝牙配对服务...")
+        await _async_setup_bluetooth_services(hass)
+        print(f"DEBUG: Finished _async_setup_bluetooth_services")
+    else:
+        print(f"DEBUG: Skipping service registration (entry_count={entry_count})")
+        _LOGGER.info("跳过服务注册（已有 %d 个条目）", entry_count)
 
     if not device_address:
         _LOGGER.error("配置条目中没有设备地址")
@@ -105,7 +153,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # 在 hass 数据中存储协调器
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # 设置平台
@@ -137,6 +184,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # 断开 BLE 客户端连接
         coordinator: VCXKnobCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
         await coordinator.async_disconnect()
+
+        # 减少条目计数
+        hass.data[DOMAIN][_DATA_ENTRY_COUNT] = hass.data[DOMAIN].get(_DATA_ENTRY_COUNT, 1) - 1
+
+        # 如果这是最后一个条目，注销服务
+        if hass.data[DOMAIN][_DATA_ENTRY_COUNT] == 0:
+            await _async_unload_bluetooth_services(hass)
 
         _LOGGER.info("VCX-Knob 集成已卸载: %s", entry.title)
 
@@ -173,22 +227,45 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 # ============================================================================
-# 服务
+# 蓝牙服务管理
 # ============================================================================
 
-async def async_setup_services(hass: HomeAssistant) -> None:
-    """为 VCX-Knob 集成设置服务
+async def _async_setup_bluetooth_services(hass: HomeAssistant) -> None:
+    """设置蓝牙配对相关服务
 
     Args:
         hass: Home Assistant 实例
     """
-    pass
+    print("DEBUG: _async_setup_bluetooth_services called")
+    _LOGGER.info("正在调用 _async_setup_bluetooth_services...")
+    try:
+        from .bluetooth_pairing import async_setup_services
+        print("DEBUG: async_setup_services imported")
+        _LOGGER.info("已导入 async_setup_services，正在调用...")
+        await async_setup_services(hass)
+        print("DEBUG: async_setup_services completed")
+        _LOGGER.info("蓝牙配对服务已启用")
+    except ImportError as err:
+        print(f"DEBUG: ImportError: {err}")
+        _LOGGER.error("无法导入 async_setup_services: %s", err)
+        raise
+    except Exception as err:
+        print(f"DEBUG: Exception: {err}")
+        _LOGGER.error("启用蓝牙配对服务时出错: %s", err, exc_info=True)
+        raise
 
 
-async def async_unload_services(hass: HomeAssistant) -> None:
-    """卸载 VCX-Knob 集成的服务
+async def _async_unload_bluetooth_services(hass: HomeAssistant) -> None:
+    """卸载蓝牙配对相关服务
 
     Args:
         hass: Home Assistant 实例
     """
-    pass
+    try:
+        from .bluetooth_pairing import async_unload_services
+        await async_unload_services(hass)
+        _LOGGER.info("蓝牙配对服务已禁用")
+    except ImportError:
+        pass
+    except Exception as err:
+        _LOGGER.error("禁用蓝牙配对服务时出错: %s", err)

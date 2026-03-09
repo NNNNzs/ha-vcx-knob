@@ -8,10 +8,7 @@
       },
       "scan": {
         "title": "Scanning for Devices",
-        "description": "Scanning for {device_name} devices nearby. Make sure your device is powered on and within range.",
-        "data": {
-          "device_address": "Discovered Devices"
-        }
+        "description": "Scanning for {device_name} devices nearby. Make sure your device is powered on and within range."
       },
       "select_device": {
         "title": "Select Device",
@@ -20,11 +17,21 @@
           "device_address": "Discovered Devices"
         }
       },
+      "pair": {
+        "title": "Pair Device",
+        "description": "## 📝 Bluetooth Pairing Instructions\n\nThis step will attempt to pair your VCX-Knob device.\n\n### About Pairing\n- **Some BLE devices** may not support standard Bluetooth pairing\n- If pairing fails, **the setup will continue anyway**\n- You can pair later using \"Developer Tools → Actions\"\n\n### Pairing Methods\n\n#### Method 1: Automated (Recommended)\nClick **Submit** below. The integration will attempt to pair automatically.\n\n#### Method 2: Manual via Command Line\n1. SSH to your Home Assistant server:\n```bash\nssh root@your-server\n```\n\n2. Run these commands:\n```bash\nbluetoothctl\npair {device_address}\n# If needed, confirm pairing on the device\ntrust {device_address}\ninfo {device_address}\nquit\n```\n\n#### Method 3: Via HA Service\nIn \"Developer Tools → Actions\":\n- Service domain: `vcx_knob`\n- Service: `pair_bluetooth_device`\n- Device MAC address: `{device_address}`\n\n---\n\n**Device Info:**\n- **Name:** {device_name}\n- **Address:** {device_address}\n- **Signal:** {rssi} dBm\n\nClick **Submit** to continue.",
+        "description_placeholders": {
+          "device_name": "{device_name}",
+          "device_address": "{device_address}",
+          "rssi": "{rssi}"
+        }
+      },
       "confirm": {
         "title": "Confirm Device",
         "description": "Found **{device_name}** at **{device_address}** with signal strength **{rssi} dBm**.\n\nYou can customize the device name below.",
         "data": {
-          "device_name": "Device Name"
+          "device_name": "Device Name",
+          "auto_connect": "Automatically connect to device"
         }
       }
     },
@@ -35,11 +42,15 @@
     },
     "abort": {
       "already_configured": "This device has already been configured.",
-      "no_devices_found": "No {device_name} devices found. Make sure the device is powered on and within Bluetooth range."
+      "no_devices_found": "No {device_name} devices found. Make sure the device is powered on and within Bluetooth range.",
+      "pairing_failed": "Failed to pair with {device_address}: {error_message}\n\nPlease try:\n1. Make sure the device is close to your Home Assistant server (within 1 meter)\n2. Check if the device needs to be put in pairing mode (see device manual)\n3. Try pairing using your phone's Bluetooth settings\n4. Try removing the device from your phone's Bluetooth and try again\n\nAfter successful pairing, try adding the integration again."
     }
   },
   "entity": {
     "sensor": {
+      "device_address": {
+        "name": "Device Address"
+      },
       "rssi": {
         "name": "Signal Strength"
       },
@@ -193,6 +204,9 @@
     "binary_sensor": {
       "connection": {
         "name": "Connected"
+      },
+      "paired": {
+        "name": "Paired"
       }
     }
   },

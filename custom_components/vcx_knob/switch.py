@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -145,7 +145,7 @@ class VCXKnobSwitch(SwitchEntity):
         self._coordinator = coordinator
         self._description = description
 
-        self._attr_has_entity_name = True
+        self._attr_has_entity_name = False
         self._attr_unique_id = f"{coordinator.device_address}_{description.key}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, coordinator.device_address)},
@@ -170,14 +170,33 @@ class VCXKnobSwitch(SwitchEntity):
     @property
     def available(self) -> bool:
         """返回实体是否可用"""
-        return self._coordinator.last_update_success and self._coordinator.data.get("connected", False)
+        # 开关在客户端存在就可用
+        try:
+            client = self._coordinator.client._client
+            if client is None:
+                return False
+            try:
+                return client.is_connected
+            except Exception:
+                # 如果无法检查连接状态，假设可用
+                return True
+        except Exception:
+            return False
+
+    @property
+    def name(self) -> str:
+        """返回实体名称"""
+        return self._description.name
 
     @property
     def is_on(self) -> bool | None:
         """如果开关打开则返回 True"""
+        data = self._coordinator.data
+        if data is None:
+            return None
         state_key = self._description.state_key
         if state_key:
-            return self._coordinator.data.get(state_key, False)
+            return data.get(state_key, False)
         return None
 
     @property

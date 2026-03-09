@@ -5,113 +5,19 @@
 """
 
 import logging
-from dataclasses import dataclass
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     SELECTS,
-    Command,
     DOMAIN,
 )
 from .coordinator import VCXKnobCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-
-# ============================================================================
-# 选择实体描述
-# ============================================================================
-
-@dataclass(frozen=True)
-class VCXKnobSelectDescription:
-    """VCX-Knob 选择的描述"""
-
-    key: str
-    name: str
-    icon: str
-    command: str
-    options: list[str]
-    options_map: dict[str, int]  # 选项值到数据字节的映射
-    state_key: str | None = None
-    entity_category: str | None = None
-    unit: str | None = None
-
-
-SELECT_DESCRIPTIONS: tuple[VCXKnobSelectDescription, ...] = (
-    VCXKnobSelectDescription(
-        key="water_temperature",
-        name="水温",
-        icon="mdi:water-thermometer",
-        command=Command.SHUIWEN,
-        options=["off", "34", "37", "40"],
-        options_map={"off": 0, "34": 1, "37": 2, "40": 3},
-        state_key="water_temp_code",
-        entity_category="config",
-    ),
-    VCXKnobSelectDescription(
-        key="seat_temperature",
-        name="座温",
-        icon="mdi:seat",
-        command=Command.ZUOWEN,
-        options=["off", "34", "37", "40"],
-        options_map={"off": 0, "34": 1, "37": 2, "40": 3},
-        state_key="seat_temp_code",
-        entity_category="config",
-    ),
-    VCXKnobSelectDescription(
-        key="wind_temperature",
-        name="风温",
-        icon="mdi:air-conditioner",
-        command=Command.QIANGWEN,
-        options=["off", "40", "45", "50"],
-        options_map={"off": 0, "40": 1, "45": 2, "50": 3},
-        state_key="wind_temp_code",
-        entity_category="config",
-    ),
-    VCXKnobSelectDescription(
-        key="water_level",
-        name="水量",
-        icon="mdi:water",
-        command=Command.SHUILIANG,
-        options=["off", "low", "medium", "high"],
-        options_map={"off": 0, "low": 1, "medium": 2, "high": 3},
-        state_key="water_level_code",
-        entity_category="config",
-    ),
-    VCXKnobSelectDescription(
-        key="air_level",
-        name="热风档位",
-        icon="mdi:air-filter",
-        command=Command.QIANGDANG,
-        options=["off", "low", "medium", "high"],
-        options_map={"off": 0, "low": 1, "medium": 2, "high": 3},
-        state_key="air_level_code",
-        entity_category="config",
-    ),
-    VCXKnobSelectDescription(
-        key="light_brightness",
-        name="灯光亮度",
-        icon="mdi:brightness-6",
-        command=Command.GUANGDANG,
-        options=["off", "low", "medium", "high"],
-        options_map={"off": 0, "low": 1, "medium": 2, "high": 3},
-        state_key="light_brightness_code",
-        entity_category="config",
-    ),
-    VCXKnobSelectDescription(
-        key="radar_sensitivity",
-        name="雷达灵敏度",
-        icon="mdi:radar",
-        command=Command.CHUANGAN,
-        options=["low", "medium", "high"],
-        options_map={"low": 1, "medium": 2, "high": 3},
-        entity_category="config",
-    ),
-)
 
 
 # ============================================================================
@@ -124,7 +30,7 @@ class VCXKnobSelect(SelectEntity):
     def __init__(
         self,
         coordinator: VCXKnobCoordinator,
-        description: VCXKnobSelectDescription,
+        description,
     ) -> None:
         """初始化选择
 
@@ -137,7 +43,7 @@ class VCXKnobSelect(SelectEntity):
         self._coordinator = coordinator
         self._description = description
 
-        self._attr_has_entity_name = True
+        self._attr_has_entity_name = False
         self._attr_unique_id = f"{coordinator.device_address}_{description.key}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, coordinator.device_address)},
@@ -161,9 +67,14 @@ class VCXKnobSelect(SelectEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """处理来自协调器的更新数据"""
+        data = self._coordinator.data
+        if data is None:
+            self.async_write_ha_state()
+            return
+
         state_key = self._description.state_key
         if state_key:
-            state_code = self._coordinator.data.get(state_key)
+            state_code = data.get(state_key)
             if state_code is not None:
                 # 将代码映射到选项值
                 self._attr_current_option = self._code_to_option(state_code)
@@ -195,7 +106,23 @@ class VCXKnobSelect(SelectEntity):
     @property
     def available(self) -> bool:
         """返回实体是否可用"""
-        return self._coordinator.last_update_success and self._coordinator.data.get("connected", False)
+        # 选择在客户端存在就可用
+        try:
+            client = self._coordinator.client._client
+            if client is None:
+                return False
+            try:
+                return client.is_connected
+            except Exception:
+                # 如果无法检查连接状态，假设可用
+                return True
+        except Exception:
+            return False
+
+    @property
+    def name(self) -> str:
+        """返回实体名称"""
+        return self._description.name
 
     @property
     def icon(self) -> str | None:
@@ -241,7 +168,7 @@ async def async_setup_entry(
 
     entities = [
         VCXKnobSelect(coordinator, description)
-        for description in SELECT_DESCRIPTIONS
+        for description in SELECTS
     ]
 
     async_add_entities(entities)

@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
+    SensorDeviceClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,11 +17,11 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     PERCENTAGE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    SENSOR_ENTITY_DESCRIPTIONS,
     DOMAIN,
 )
 from .coordinator import VCXKnobCoordinator
@@ -34,12 +35,18 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
+        key="device_address",
+        name="蓝牙地址",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:bluetooth",
+    ),
+    SensorEntityDescription(
         key="rssi",
         name="信号强度",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class="signal_strength",
         state_class="measurement",
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="air_percentage",
@@ -60,7 +67,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         name="雷达等级",
         state_class="measurement",
         icon="mdi:radar",
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="cover_close_time",
@@ -99,7 +106,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class="measurement",
         icon="mdi:timer-outline",
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="small_flush_timing",
@@ -107,7 +114,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class="measurement",
         icon="mdi:timer-outline",
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="foot_sensor_distance",
@@ -115,7 +122,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement="cm",
         state_class="measurement",
         icon="mdi:ruler",
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="sterilization_time",
@@ -123,7 +130,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class="measurement",
         icon="mdi:clock-outline",
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -149,7 +156,8 @@ class VCXKnobSensor(SensorEntity):
         super().__init__()
 
         self._coordinator = coordinator
-        self._attr_has_entity_name = True
+        self.entity_description = description
+        self._attr_has_entity_name = False
         self._attr_unique_id = f"{coordinator.device_address}_{description.key}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, coordinator.device_address)},
@@ -175,12 +183,21 @@ class VCXKnobSensor(SensorEntity):
     @property
     def available(self) -> bool:
         """返回实体是否可用"""
-        return self._coordinator.last_update_success and self._coordinator.data.get("connected", False)
+        # 蓝牙地址传感器始终可用，其他传感器需要连接
+        if self.entity_description.key == "device_address":
+            return True
+        data = self._coordinator.data
+        if data is None:
+            return False
+        return self._coordinator.last_update_success and data.get("connected", False)
 
     @property
     def native_value(self) -> int | None:
         """返回传感器的状态"""
-        return self._coordinator.data.get(self.entity_description.key)
+        data = self._coordinator.data
+        if data is None:
+            return None
+        return data.get(self.entity_description.key)
 
 
 # ============================================================================

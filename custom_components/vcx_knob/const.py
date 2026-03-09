@@ -1,6 +1,6 @@
 """VCX-Knob 集成的常量定义"""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 
 # ============================================================================
@@ -191,6 +191,16 @@ class EntityDescription:
     name: str
     entity_category: str | None = None
     translation_key: str | None = None
+    device_class: str | None = None
+    unit: str | None = None
+    state_class: str | None = None
+
+    def __post_init__(self):
+        # 确保必填字段不为空
+        if not self.key:
+            raise ValueError("key 不能为空")
+        if not self.name:
+            raise ValueError("name 不能为空")
 
 
 @dataclass(frozen=True)
@@ -208,13 +218,14 @@ class SensorEntityDescription(EntityDescription):
     unit: str | None = None
     device_class: str | None = None
     state_class: str | None = None
+    icon: str | None = None
 
 
 @dataclass(frozen=True)
 class ButtonEntityDescription(EntityDescription):
     """按钮实体的描述"""
 
-    command: str
+    command: str = field(default="")
     data_byte: str = "00"
 
 
@@ -222,9 +233,11 @@ class ButtonEntityDescription(EntityDescription):
 class SelectEntityDescription(EntityDescription):
     """选择实体的描述"""
 
-    command: str
-    options: list[str]
-    options_map: dict[str, int]  # 选项值到数据字节的映射
+    command: str = field(default="")
+    options: list[str] = field(default_factory=list)
+    options_map: dict[str, int] = field(default_factory=dict)
+    state_key: str | None = None
+    icon: str | None = None
 
 
 # ============================================================================
@@ -322,51 +335,71 @@ SELECTS = [
     SelectEntityDescription(
         key="water_temperature",
         name="水温",
+        icon="mdi:water-thermometer",
         command=Command.SHUIWEN,
         options=["off", "34", "37", "40"],
         options_map={"off": 0, "34": 1, "37": 2, "40": 3},
+        state_key="water_temp_code",
+        entity_category="config",
     ),
     SelectEntityDescription(
         key="seat_temperature",
         name="座温",
+        icon="mdi:seat",
         command=Command.ZUOWEN,
         options=["off", "34", "37", "40"],
         options_map={"off": 0, "34": 1, "37": 2, "40": 3},
+        state_key="seat_temp_code",
+        entity_category="config",
     ),
     SelectEntityDescription(
         key="wind_temperature",
         name="风温",
+        icon="mdi:air-conditioner",
         command=Command.QIANGWEN,
         options=["off", "40", "45", "50"],
         options_map={"off": 0, "40": 1, "45": 2, "50": 3},
+        state_key="wind_temp_code",
+        entity_category="config",
     ),
     SelectEntityDescription(
         key="water_level",
         name="水量",
+        icon="mdi:water",
         command=Command.SHUILIANG,
         options=["off", "low", "medium", "high"],
         options_map={"off": 0, "low": 1, "medium": 2, "high": 3},
+        state_key="water_level_code",
+        entity_category="config",
     ),
     SelectEntityDescription(
         key="air_level",
         name="热风档位",
+        icon="mdi:air-filter",
         command=Command.QIANGDANG,
         options=["off", "low", "medium", "high"],
         options_map={"off": 0, "low": 1, "medium": 2, "high": 3},
+        state_key="air_level_code",
+        entity_category="config",
     ),
     SelectEntityDescription(
         key="light_brightness",
         name="灯光亮度",
+        icon="mdi:brightness-6",
         command=Command.GUANGDANG,
         options=["off", "low", "medium", "high"],
         options_map={"off": 0, "low": 1, "medium": 2, "high": 3},
+        state_key="light_brightness_code",
+        entity_category="config",
     ),
     SelectEntityDescription(
         key="radar_sensitivity",
         name="雷达灵敏度",
+        icon="mdi:radar",
         command=Command.CHUANGAN,
         options=["low", "medium", "high"],
         options_map={"low": 1, "medium": 2, "high": 3},
+        entity_category="config",
     ),
 ]
 
@@ -375,6 +408,10 @@ SELECTS = [
 # ============================================================================
 
 SENSORS = [
+    SensorEntityDescription(
+        key="device_address",
+        name="设备地址",
+    ),
     SensorEntityDescription(
         key="rssi",
         name="信号强度",

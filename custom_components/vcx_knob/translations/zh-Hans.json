@@ -7,15 +7,32 @@
       },
       "scan": {
         "title": "正在扫描设备",
-        "description": "正在扫描附近的 {device_name} 设备。请确保设备已开机且在范围内。"
+        "description": "正在扫描附近的 {device_name} 设备。请确保设备已开机且在范围内。",
+        "data": {}
       },
       "select_device": {
         "title": "选择设备",
-        "description": "选择要添加的 VCX-Knob 设备。"
+        "description": "选择要添加的 VCX-Knob 设备。",
+        "data": {
+          "device_address": "发现的设备"
+        }
+      },
+      "pair": {
+        "title": "配对设备",
+        "description": "## 📝 蓝牙配对说明\n\n此步骤尝试配对您的 VCX-Knob 设备。\n\n### 关于配对\n- **某些 BLE 设备**可能不支持标准蓝牙配对\n- 如果配对失败，**集成仍会继续设置**\n- 您可以稍后通过「开发者工具 → 服务」进行配对\n\n### 配对方法\n\n#### 方法 1：自动化（推荐）\n点击下方的**提交**按钮。集成将尝试自动配对。\n\n#### 方法 2：通过命令行手动配对\n1. SSH 到您的 Home Assistant 服务器：\n```bash\nssh root@your-server\n```\n\n2. 运行以下命令：\n```bash\nbluetoothctl\npair {device_address}\n# 如需确认，请在设备上确认配对\ntrust {device_address}\ninfo {device_address}\nquit\n```\n\n#### 方法 3：通过 HA 服务配对\n在「开发者工具 → 动作」中：\n- 服务域：`vcx_knob`\n- 服务：`pair_bluetooth_device`\n- 设备 MAC 地址：`{device_address}`\n\n---\n\n**设备信息：**\n- **名称：** {device_name}\n- **地址：** {device_address}\n- **信号：** {rssi} dBm\n\n点击**提交**继续。",
+        "description_placeholders": {
+          "device_name": "{device_name}",
+          "device_address": "{device_address}",
+          "rssi": "{rssi}"
+        }
       },
       "confirm": {
         "title": "确认设备",
-        "description": "发现 **{device_name}**，地址 **{device_address}**，信号强度 **{rssi} dBm**。\n\n您可以在下方自定义设备名称。"
+        "description": "发现 **{device_name}**，地址 **{device_address}**，信号强度 **{rssi} dBm**。\n\n您可以在下方自定义设备名称。",
+        "data": {
+          "device_name": "设备名称",
+          "auto_connect": "自动连接设备"
+        }
       }
     },
     "error": {
@@ -25,11 +42,15 @@
     },
     "abort": {
       "already_configured": "该设备已经配置过了。",
-      "no_devices_found": "未发现 {device_name} 设备。请确保设备已开机且在蓝牙范围内。"
+      "no_devices_found": "未发现 {device_name} 设备。请确保设备已开机且在蓝牙范围内。",
+      "pairing_failed": "与 {device_address} 配对失败：{error_message}\n\n请尝试：\n1. 确保设备靠近 Home Assistant 服务器（1 米内）\n2. 检查设备是否需要进入配对模式（请参阅设备说明书）\n3. 尝试使用手机蓝牙设置配对\n4. 尝试从手机蓝牙中删除设备后重试\n\n配对成功后，请重新添加集成。"
     }
   },
   "entity": {
     "sensor": {
+      "device_address": {
+        "name": "设备地址"
+      },
       "rssi": {
         "name": "信号强度"
       },
@@ -182,7 +203,10 @@
     },
     "binary_sensor": {
       "connection": {
-        "name": "已连接"
+        "name": "蓝牙连接"
+      },
+      "paired": {
+        "name": "配对状态"
       }
     }
   },
