@@ -3,7 +3,18 @@
     "allow": [
       "mcp__zread__get_repo_structure",
       "Bash(tree:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(done)",
+      "Bash(python3:*)",
+      "Bash(bash /Users/nnnnzs/project/ha-vcx-knob/sync_to_ha.sh)",
+      "Bash(ssh:*)",
+      "Bash(/Users/nnnnzs/project/ha-vcx-knob/sync_to_ha.sh:*)",
+      "Bash(chmod:*)",
+      "Bash(bash scripts/development/sync_to_ha.sh)",
+      "Bash(bash -x ./scripts/development/sync_to_ha.sh)",
+      "Bash(bash ./scripts/development/sync_to_ha.sh)"
     ]
   }
 }
