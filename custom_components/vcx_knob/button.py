@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -35,7 +36,7 @@ class VCXKnobButtonDescription:
     icon: str
     command: str
     data_byte: int = 0
-    entity_category: str | None = None
+    entity_category: EntityCategory | str | None = None
 
 
 BUTTON_DESCRIPTIONS: tuple[VCXKnobButtonDescription, ...] = (
@@ -122,7 +123,7 @@ BUTTON_DESCRIPTIONS: tuple[VCXKnobButtonDescription, ...] = (
         name="恢复出厂设置",
         icon="mdi:restore",
         command=Command.HUIFUCHUCHANG,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -149,6 +150,7 @@ class VCXKnobButton(ButtonEntity):
 
         self._coordinator = coordinator
         self._description = description
+        self._attr_entity_description = description  # 设置 entity_description 属性
 
         self._attr_has_entity_name = False
         self._attr_unique_id = f"{coordinator.device_address}_{description.key}"
@@ -163,34 +165,10 @@ class VCXKnobButton(ButtonEntity):
     @property
     def available(self) -> bool:
         """返回实体是否可用"""
-        # 按钮在客户端存在就可用
-        # 由于 BLE 连接状态检测不稳定，我们假设如果客户端对象存在就可用
-        try:
-            # 检查 bleak 客户端对象是否存在
-            client = self._coordinator.client._client
-            if client is None:
-                return False
-
-            # 尝试检查连接状态
-            try:
-                is_connected = client.is_connected
-                _LOGGER.debug(
-                    "按钮 %s 可用性: is_connected=%s",
-                    self.entity_description.key,
-                    is_connected
-                )
-                return is_connected
-            except Exception as e:
-                _LOGGER.warning(
-                    "检查按钮 %s 连接状态时出错: %s，假设可用",
-                    self.entity_description.key,
-                    e
-                )
-                # 如果无法检查连接状态，假设可用（让用户尝试）
-                return True
-        except Exception as e:
-            _LOGGER.error("检查按钮可用性时出错: %s", e)
-            return False
+        # 按钮始终可用，即使设备未连接
+        # 这样用户可以尝试点击按钮，如果设备离线，会在点击时显示错误
+        # 这比始终显示灰色按钮提供更好的用户体验
+        return True
 
     @property
     def name(self) -> str:

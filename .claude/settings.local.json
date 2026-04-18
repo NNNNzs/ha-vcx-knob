@@ -14,7 +14,25 @@
       "Bash(chmod:*)",
       "Bash(bash scripts/development/sync_to_ha.sh)",
       "Bash(bash -x ./scripts/development/sync_to_ha.sh)",
-      "Bash(bash ./scripts/development/sync_to_ha.sh)"
+      "Bash(bash ./scripts/development/sync_to_ha.sh)",
+      "Bash(hass-cli --version)",
+      "Bash(hass-cli info:*)",
+      "Bash(hass-cli --help)",
+      "Read(//root/**)",
+      "Read(//root/.config/hass-cli/**)",
+      "Bash(rm -rf /vol2/1000/docker_v/homeassistant/config/custom_components/vcx_knob)",
+      "Bash(ln -s /root/project/ha-vcx-knob/custom_components/vcx_knob /vol2/1000/docker_v/homeassistant/config/custom_components/vcx_knob)",
+      "Bash(docker exec:*)",
+      "Read(//vol2/1000/docker_v/homeassistant/**)",
+      "Read(//vol2/1000/docker_v/**)",
+      "Bash(awk '{print $1, $6}')",
+      "Bash(./scripts/development/sync_to_ha.sh:*)",
+      "Bash(curl:*)",
+      "Bash(docker restart:*)",
+      "Bash(hass-cli entity:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker stop:*)",
+      "Bash(docker rm:*)"
     ]
   }
 }

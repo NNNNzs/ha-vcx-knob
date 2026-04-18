@@ -1,28 +1,40 @@
 #!/bin/bash
 
 # 本地同步脚本到 Home Assistant
-# 使用方法:
-# 1. 修改 HA_HOST 和 HA_CONFIG_DIR 为你的实际值
-# 2. chmod +x sync_to_ha.sh
-# 3. ./sync_to_ha.sh
+# 适用于 NAS 本地 Docker 部署场景
 
-HA_HOST="192.168.1.80"
-HA_USER="root"
-HA_CONFIG_DIR="/root/docker_v/homeassistant/config"
+set -e
 
-# 获取项目根目录 (向上两级从 scripts/development 到项目根)
+HA_CONFIG_DIR="/vol2/1000/docker_v/homeassistant/config"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-LOCAL_DIR="${PROJECT_ROOT}/custom_components/vcx_knob"
+SOURCE_DIR="${PROJECT_ROOT}/custom_components/vcx_knob"
+TARGET_DIR="${HA_CONFIG_DIR}/custom_components/vcx_knob"
 
-echo "正在同步到 Home Assistant..."
-echo "本地目录: ${LOCAL_DIR}"
-echo "远程目录: ${HA_USER}@${HA_HOST}:${HA_CONFIG_DIR}/custom_components/vcx_knob/"
+# 颜色输出
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
-# 使用 rsync 同步文件
-rsync -avz --delete \
-    "${LOCAL_DIR}/" \
-    ${HA_USER}@${HA_HOST}:${HA_CONFIG_DIR}/custom_components/vcx_knob/
+echo -e "${YELLOW}正在同步 VCX-Knob 集成到 Home Assistant...${NC}"
+echo "源目录: ${SOURCE_DIR}"
+echo "目标目录: ${TARGET_DIR}"
+echo ""
 
-echo "同步完成！"
-echo "请在 Home Assistant 中点击: 设置 → 系统 → 右上角菜单 → 重启"
+# 确保目标目录存在
+mkdir -p "${TARGET_DIR}"
+
+# 同步文件
+cp -rf "${SOURCE_DIR}/"* "${TARGET_DIR}/"
+
+echo -e "${GREEN}✓ 同步完成！${NC}"
+echo ""
+echo "接下来："
+echo "  1. 清除 Python 缓存:"
+echo "     docker exec homeassistant find /config/custom_components/vcx_knob -name '*.pyc' -delete"
+echo ""
+echo "  2. 重启 Home Assistant:"
+echo "     docker restart homeassistant"
+echo ""
+echo "  或使用便捷命令:"
+echo "     ./scripts/development/restart_ha.sh"

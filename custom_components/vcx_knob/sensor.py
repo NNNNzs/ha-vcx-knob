@@ -120,7 +120,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class="measurement",
         icon="mdi:timer-outline",
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="small_flush_up",
@@ -151,7 +151,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         name="水压",
         state_class="measurement",
         icon="mdi:water-pump",
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="ambient_light_brightness",

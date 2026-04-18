@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -35,7 +36,7 @@ class VCXKnobSwitchDescription:
     command: str | None = None
     data_byte: int = 0
     state_key: str | None = None
-    entity_category: str | None = None
+    entity_category: EntityCategory | str | None = None
 
 
 SWITCH_DESCRIPTIONS: tuple[VCXKnobSwitchDescription, ...] = (
@@ -44,35 +45,35 @@ SWITCH_DESCRIPTIONS: tuple[VCXKnobSwitchDescription, ...] = (
         name="冲水",
         icon="mdi:toilet",
         state_key="flush_enabled",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     VCXKnobSwitchDescription(
         key="seat",
         name="座圈",
         icon="mdi:seat",
         state_key="seat_enabled",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     VCXKnobSwitchDescription(
         key="bubble",
         name="气泡",
         icon="mdi:buffer",
         state_key="bubble_enabled",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     VCXKnobSwitchDescription(
         key="air",
         name="热风",
         icon="mdi:air-filter",
         state_key="air_enabled",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     VCXKnobSwitchDescription(
         key="radar",
         name="雷达",
         icon="mdi:radar",
         state_key="radar_enabled",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     VCXKnobSwitchDescription(
         key="voice",
@@ -80,14 +81,14 @@ SWITCH_DESCRIPTIONS: tuple[VCXKnobSwitchDescription, ...] = (
         icon="mdi:microphone",
         command=Command.YUYIN,
         state_key="voice_enabled",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     VCXKnobSwitchDescription(
         key="sensor",
         name="传感器",
         icon="mdi:sensor",
         state_key="sensors_enabled",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     VCXKnobSwitchDescription(
         key="auto_mode",
@@ -95,7 +96,7 @@ SWITCH_DESCRIPTIONS: tuple[VCXKnobSwitchDescription, ...] = (
         icon="mdi:autorenew",
         command=Command.ZIDONG,
         state_key="auto_enabled",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     VCXKnobSwitchDescription(
         key="night_light",
@@ -103,21 +104,21 @@ SWITCH_DESCRIPTIONS: tuple[VCXKnobSwitchDescription, ...] = (
         icon="mdi:lightbulb-night",
         command=Command.GUANGDENG,
         state_key="lights_enabled",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     VCXKnobSwitchDescription(
         key="foot_sensor",
         name="脚感应",
         icon="mdi:eye",
         state_key="foot_sensor_enabled",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     VCXKnobSwitchDescription(
         key="sterilization",
         name="杀菌",
         icon="mdi:spray-bottle",
         state_key="sterilization_enabled",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 

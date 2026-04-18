@@ -3,6 +3,8 @@
 from dataclasses import dataclass, field
 from enum import StrEnum
 
+from homeassistant.helpers.entity import EntityCategory
+
 # ============================================================================
 # 域名和配置
 # ============================================================================
@@ -189,7 +191,7 @@ class EntityDescription:
 
     key: str
     name: str
-    entity_category: str | None = None
+    entity_category: EntityCategory | str | None = None
     translation_key: str | None = None
     device_class: str | None = None
     unit: str | None = None
@@ -248,60 +250,60 @@ SWITCHES = [
     SwitchEntityDescription(
         key="flush",
         name="冲水",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key="seat",
         name="座圈",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key="bubble",
         name="气泡",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key="air",
         name="热风",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key="radar",
         name="雷达",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key="voice",
         name="语音控制",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         command=Command.YUYIN,
     ),
     SwitchEntityDescription(
         key="sensor",
         name="传感器",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key="auto_mode",
         name="自动模式",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         command=Command.ZIDONG,
     ),
     SwitchEntityDescription(
         key="night_light",
         name="夜灯",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         command=Command.GUANGDENG,
     ),
     SwitchEntityDescription(
         key="foot_sensor",
         name="脚感应",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key="sterilization",
         name="杀菌",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
 ]
 
@@ -340,7 +342,7 @@ SELECTS = [
         options=["off", "34", "37", "40"],
         options_map={"off": 0, "34": 1, "37": 2, "40": 3},
         state_key="water_temp_code",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     SelectEntityDescription(
         key="seat_temperature",
@@ -350,7 +352,7 @@ SELECTS = [
         options=["off", "34", "37", "40"],
         options_map={"off": 0, "34": 1, "37": 2, "40": 3},
         state_key="seat_temp_code",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     SelectEntityDescription(
         key="wind_temperature",
@@ -360,7 +362,7 @@ SELECTS = [
         options=["off", "40", "45", "50"],
         options_map={"off": 0, "40": 1, "45": 2, "50": 3},
         state_key="wind_temp_code",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     SelectEntityDescription(
         key="water_level",
@@ -370,7 +372,7 @@ SELECTS = [
         options=["off", "low", "medium", "high"],
         options_map={"off": 0, "low": 1, "medium": 2, "high": 3},
         state_key="water_level_code",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     SelectEntityDescription(
         key="air_level",
@@ -380,7 +382,7 @@ SELECTS = [
         options=["off", "low", "medium", "high"],
         options_map={"off": 0, "low": 1, "medium": 2, "high": 3},
         state_key="air_level_code",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     SelectEntityDescription(
         key="light_brightness",
@@ -390,7 +392,7 @@ SELECTS = [
         options=["off", "low", "medium", "high"],
         options_map={"off": 0, "low": 1, "medium": 2, "high": 3},
         state_key="light_brightness_code",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
     SelectEntityDescription(
         key="radar_sensitivity",
@@ -399,7 +401,7 @@ SELECTS = [
         command=Command.CHUANGAN,
         options=["low", "medium", "high"],
         options_map={"low": 1, "medium": 2, "high": 3},
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     ),
 ]
 
