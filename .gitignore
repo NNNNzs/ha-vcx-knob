@@ -150,3 +150,7 @@ cython_debug/
 # Project specific
 *.bak
 .pytest_cache/
+
+.claude
+CLAUDE.md
+.agents

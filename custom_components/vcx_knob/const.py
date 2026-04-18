@@ -458,19 +458,30 @@ SENSORS = [
         state_class="measurement",
     ),
     SensorEntityDescription(
+        key="ring_close_intensity",
+        name="座圈关闭强度",
+        state_class="measurement",
+    ),
+    SensorEntityDescription(
         key="bubble_level",
         name="气泡等级",
         state_class="measurement",
     ),
     SensorEntityDescription(
-        key="big_flush_timing",
-        name="大冲水时间",
+        key="big_flush_water",
+        name="大冲水量",
         unit="s",
         state_class="measurement",
     ),
     SensorEntityDescription(
-        key="small_flush_timing",
-        name="小冲水时间",
+        key="small_flush_water",
+        name="小冲水量",
+        unit="s",
+        state_class="measurement",
+    ),
+    SensorEntityDescription(
+        key="small_flush_up",
+        name="小冲上冲时间",
         unit="s",
         state_class="measurement",
     ),
@@ -484,6 +495,17 @@ SENSORS = [
         key="sterilization_time",
         name="杀菌时间",
         unit="min",
+        state_class="measurement",
+    ),
+    SensorEntityDescription(
+        key="water_pressure",
+        name="水压",
+        state_class="measurement",
+    ),
+    SensorEntityDescription(
+        key="ambient_light_brightness",
+        name="氛围灯亮度",
+        unit="%",
         state_class="measurement",
     ),
 ]
@@ -532,16 +554,15 @@ STATE_AUTO_FLUSH_ENABLED = "auto_flush_enabled"
 STATE_VIRTUAL_SEAT_ENABLED = "virtual_seat_enabled"
 STATE_BIG_FLUSH_MODE = "big_flush_mode"
 
-# 温度状态键（来自 Type 02 包）
-STATE_WATER_TEMP_CODE = "water_temp_code"
+# 温度状态键（来自 Type 02 包）- 根据参考实现更新
+STATE_WATER_LEVEL = "water_level"
 STATE_WATER_TEMP_VALUE = "water_temp_value"
-STATE_WIND_TEMP_CODE = "wind_temp_code"
+STATE_WIND_LEVEL = "wind_level"
 STATE_WIND_TEMP_VALUE = "wind_temp_value"
-STATE_SEAT_TEMP_CODE = "seat_temp_code"
+STATE_SEAT_LEVEL = "seat_level"
 STATE_SEAT_TEMP_VALUE = "seat_temp_value"
-STATE_WATER_LEVEL_CODE = "water_level_code"
-STATE_AIR_LEVEL_CODE = "air_level_code"
-STATE_LIGHT_BRIGHTNESS_CODE = "light_brightness_code"
+STATE_WATER_PRESSURE = "water_pressure"
+STATE_AMBIENT_LIGHT_BRIGHTNESS = "ambient_light_brightness"
 
 # 百分比状态键（来自 Type 03 包）
 STATE_AIR_PERCENTAGE = "air_percentage"
@@ -549,23 +570,23 @@ STATE_WATER_PERCENTAGE = "water_percentage"
 STATE_RADAR_LEVEL = "radar_level"
 STATE_COVER_CLOSE_TIME = "cover_close_time"
 
-# 强度状态键（来自 Type 04 包）
+# 强度状态键（来自 Type 04 包）- 根据参考实现更新
 STATE_COVER_FLIP_INTENSITY = "cover_flip_intensity"
 STATE_RING_FLIP_INTENSITY = "ring_flip_intensity"
 STATE_COVER_CLOSE_INTENSITY = "cover_close_intensity"
+STATE_RING_CLOSE_INTENSITY = "ring_close_intensity"  # 新增
 
-# 冲水参数状态键（来自 Type 05 包）
+# 冲水参数状态键（来自 Type 05 包）- 根据参考实现更新
 STATE_BUBBLE_LEVEL = "bubble_level"
-STATE_BIG_FLUSH_TIMING = "big_flush_timing"
-STATE_SMALL_FLUSH_TIMING = "small_flush_timing"
 STATE_BIG_FLUSH_DOWN = "big_flush_down"
-STATE_BIG_FLUSH_NO_WATER = "big_flush_no_water"
-STATE_SMALL_FLUSH_NO_WATER = "small_flush_no_water"
+STATE_BIG_FLUSH_WATER = "big_flush_water"
+STATE_SMALL_FLUSH_UP = "small_flush_up"
+STATE_SMALL_FLUSH_WATER = "small_flush_water"
+STATE_SMALL_FLUSH_DOWN = "small_flush_down"
 
-# 传感器状态键（来自 Type 06 包）
-STATE_FOOT_SENSOR_ENABLED = "foot_sensor_enabled"
+# 传感器状态键（来自 Type 06 包）- 根据参考实现更新
+STATE_FOOT_SENSOR_ENABLED = "foot_sensor_enabled"  # 改为 int (0-15) 而非 bool
 STATE_FOOT_SENSOR_DISTANCE = "foot_sensor_distance"
-STATE_STERILIZATION_ENABLED = "sterilization_enabled"
 STATE_STERILIZATION_TIME = "sterilization_time"
 
 # 连接状态

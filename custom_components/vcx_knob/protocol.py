@@ -273,49 +273,48 @@ def decode_type_01_packet(data1: int, data2: int, data3: int) -> dict:
 def decode_type_02_packet(data1: int, data2: int, data3: int) -> dict:
     """解码 Type 02 数据包: 温度设置
 
-    字节布局:
-    - data1: [风温档位(2位), 水量档位(2位), 座温(2位), 水温(2位)]
-    - data2: [保留(2位), 灯光亮度(2位), 风温(2位), 座温档位(2位)]
-    - data3: [保留(6位), 座温扩展(2位)] - 将座温扩展到 4 位
+    字节布局 (根据参考实现):
+    - data1: [000][水量档位(3位)][00][风温档位(3位)]
+    - data2: [000][座温档位(3位)][00][水压档位(3位)]
+    - data3: [0000][氛围灯亮度(4位)] - 值需要乘以10
 
-    温度码:
+    温度码 (通过 levelToTemp 映射):
     - 水/座: 0=关闭, 1=34°C, 2=37°C, 3=40°C
     - 风: 0=关闭, 1=40°C, 2=45°C, 3=50°C
 
     Args:
-        data1: 包含温度码的第一个数据字节
-        data2: 包含附加码的第二个数据字节
-        data3: 包含扩展座温的第三个数据字节
+        data1: 包含水量档位(高3位)和风温档位(中间3位)的第一个数据字节
+        data2: 包含座温档位(高3位)和水压档位(中间3位)的第二个数据字节
+        data3: 包含氛围灯亮度(低4位)的第三个数据字节
 
     Returns:
         包含解码温度设置的字典
     """
-    # 从 data1 提取
-    water_temp_code = data1 & 0x03  # 第0-1位
-    seat_temp_code = (data1 >> 2) & 0x03  # 第2-3位
-    water_level_code = (data1 >> 4) & 0x03  # 第4-5位
-    wind_level_code = (data1 >> 6) & 0x03  # 第6-7位
+    # 从 data1 提取 (参考: parseTemperatureStatus)
+    water_level = (data1 >> 5) & 0x07  # 高3位 (bits 5-7)
+    wind_level = (data1 >> 2) & 0x07   # 中间3位 (bits 2-4)
 
-    # 从 data2 提取
-    seat_temp_level = data2 & 0x03  # 第0-1位
-    wind_temp_code = (data2 >> 2) & 0x03  # 第2-3位
-    light_brightness_code = (data2 >> 4) & 0x03  # 第4-5位
+    # 从 data2 提取 (参考: parseTemperatureStatus)
+    seat_level = (data2 >> 5) & 0x07   # 高3位 (bits 5-7)
+    water_pressure = (data2 >> 2) & 0x07  # 中间3位 (bits 2-4)
 
-    # 从 data3 提取 - 将座温扩展到总共 4 位
-    seat_temp_extend = data3 & 0x03  # 第0-1位
-    seat_temp_code_full = seat_temp_code | (seat_temp_extend << 2)
+    # 从 data3 提取 (参考: parseTemperatureStatus)
+    ambient_light_brightness = (data3 >> 4) & 0x0F  # 高4位 (bits 4-7), 需要乘以10
+
+    # 根据档位映射到温度值 (参考: levelToTemp)
+    water_temp_value = WATER_SEAT_TEMPERATURE_MAP.get(water_level, 0)
+    seat_temp_value = WATER_SEAT_TEMPERATURE_MAP.get(seat_level, 0)
+    wind_temp_value = WIND_TEMPERATURE_MAP.get(wind_level, 0)
 
     return {
-        "water_temp_code": water_temp_code,
-        "water_temp_value": WATER_SEAT_TEMPERATURE_MAP.get(water_temp_code, "unknown"),
-        "seat_temp_code": seat_temp_code_full,
-        "seat_temp_value": WATER_SEAT_TEMPERATURE_MAP.get(seat_temp_code_full, "unknown"),
-        "water_level_code": water_level_code,
-        "wind_level_code": wind_level_code,
-        "wind_temp_code": wind_temp_code,
-        "wind_temp_value": WIND_TEMPERATURE_MAP.get(wind_temp_code, "unknown"),
-        "light_brightness_code": light_brightness_code,
-        "seat_temp_level": seat_temp_level,
+        "water_level": water_level,
+        "water_temp_value": water_temp_value,
+        "wind_level": wind_level,
+        "wind_temp_value": wind_temp_value,
+        "seat_level": seat_level,
+        "seat_temp_value": seat_temp_value,
+        "water_pressure": water_pressure,
+        "ambient_light_brightness": ambient_light_brightness * 10,  # 值需要乘以10
     }
 
 
@@ -335,8 +334,8 @@ def decode_type_03_packet(data1: int, data2: int, data3: int) -> dict:
     Returns:
         包含解码百分比的字典
     """
-    radar_level = data3 & 0x0F  # 低 4 位
-    cover_close_time = (data3 >> 4) & 0x0F  # 高 4 位
+    cover_close_time = data3 & 0x0F  # 低 4 位 (参考: byte3Bits.substring(0, 4))
+    radar_level = (data3 >> 4) & 0x0F  # 高 4 位 (参考: byte3Bits.substring(4, 8))
 
     return {
         "air_percentage": data1,
@@ -349,88 +348,94 @@ def decode_type_03_packet(data1: int, data2: int, data3: int) -> dict:
 def decode_type_04_packet(data1: int, data2: int, data3: int) -> dict:
     """解码 Type 04 数据包: 强度设置
 
-    字节布局:
-    - data1: 盖板翻转强度
-    - data2: 座圈翻转强度
-    - data3: 盖板关闭强度
+    字节布局 (根据参考实现):
+    - data1: [盖板翻转强度(4位), 座圈翻转强度(4位)]
+    - data2: [盖板关闭强度(4位), 座圈关闭强度(4位)]
+    - data3: 未使用
 
     Args:
-        data1: 盖板翻转强度值
-        data2: 座圈翻转强度值
-        data3: 盖板关闭强度值
+        data1: 包含盖板翻转强度(高4位)和座圈翻转强度(低4位)的第一个数据字节
+        data2: 包含盖板关闭强度(高4位)和座圈关闭强度(低4位)的第二个数据字节
+        data3: 未使用的第三个数据字节
 
     Returns:
         包含解码强度值的字典
     """
+    # 参考: parseIntensityStatus
+    cover_flip_intensity = (data1 >> 4) & 0x0F  # data1 高4位 (byte1Bits.substring(4, 8))
+    ring_flip_intensity = data1 & 0x0F            # data1 低4位 (byte1Bits.substring(0, 4))
+    cover_close_intensity = (data2 >> 4) & 0x0F  # data2 高4位 (byte2Bits.substring(4, 8))
+    ring_close_intensity = data2 & 0x0F            # data2 低4位 (byte2Bits.substring(0, 4))
+
     return {
-        "cover_flip_intensity": data1,
-        "ring_flip_intensity": data2,
-        "cover_close_intensity": data3,
+        "cover_flip_intensity": cover_flip_intensity,
+        "ring_flip_intensity": ring_flip_intensity,
+        "cover_close_intensity": cover_close_intensity,
+        "ring_close_intensity": ring_close_intensity,  # 新增字段
     }
 
 
 def decode_type_05_packet(data1: int, data2: int, data3: int) -> dict:
     """解码 Type 05 数据包: 冲水参数
 
-    字节布局:
-    - data1: [大冲模式(4位), 气泡用量档位(4位)]
-    - data2: [大冲不水(4位), 大冲下冲(4位)]
-    - data3: [小冲不水(4位), 小冲下冲(4位)]
+    字节布局 (根据参考实现):
+    - data1: [气泡用量档位(4位), 大冲下冲(4位)]
+    - data2: [大冲水量(4位), 小冲上冲(4位)]
+    - data3: [小冲水量(4位), 小冲下冲(4位)]
 
     Args:
-        data1: 包含气泡用量和大冲模式的第一个数据字节
-        data2: 包含大冲水子模式的第二个数据字节
-        data3: 包含小冲水子模式的第三个数据字节
+        data1: 包含气泡用量档位(高4位)和大冲下冲(低4位)的第一个数据字节
+        data2: 包含大冲水量(高4位)和小冲上冲(低4位)的第二个数据字节
+        data3: 包含小冲水量(高4位)和小冲下冲(低4位)的第三个数据字节
 
     Returns:
         包含解码冲水参数的字典
     """
-    # data1 解析
-    bubble_level = (data1 >> 4) & 0x0F      # 气泡用量档位 (高4位)
-    dachong_shangchong = data1 & 0x0F       # 大冲上冲模式 (低4位)
+    # 参考: parseFlushStatus
+    bubble_level = (data1 >> 4) & 0x0F      # 高4位: 气泡用量档位
+    big_flush_down = data1 & 0x0F           # 低4位: 大冲下冲
 
-    # data2 解析
-    dachong_xiachong = (data2 >> 4) & 0x0F  # 大冲下冲 (高4位)
-    dachong_bushui = data2 & 0x0F           # 大冲不水 (低4位)
+    big_flush_water = (data2 >> 4) & 0x0F  # 高4位: 大冲水量
+    small_flush_up = data2 & 0x0F           # 低4位: 小冲上冲
 
-    # data3 解析
-    xiaochong_xiachong = (data3 >> 4) & 0x0F  # 小冲下冲 (高4位)
-    xiaochong_bushui = data3 & 0x0F            # 小冲不水 (低4位)
+    small_flush_water = (data3 >> 4) & 0x0F  # 高4位: 小冲水量
+    small_flush_down = data3 & 0x0F           # 低4位: 小冲下冲
 
     return {
         "bubble_level": bubble_level,
-        "big_flush_timing": dachong_shangchong,
-        "big_flush_down": dachong_xiachong,
-        "big_flush_no_water": dachong_bushui,
-        "small_flush_timing": xiaochong_xiachong,
-        "small_flush_no_water": xiaochong_bushui,
+        "big_flush_down": big_flush_down,     # 修正: 原来叫 big_flush_timing
+        "big_flush_water": big_flush_water,   # 修正: 原来叫 big_flush_no_water
+        "small_flush_up": small_flush_up,     # 修正: 原来叫 small_flush_timing
+        "small_flush_water": small_flush_water,  # 修正: 原来叫 small_flush_no_water
+        "small_flush_down": small_flush_down,
     }
 
 
 def decode_type_06_packet(data1: int, data2: int, data3: int) -> dict:
     """解码 Type 06 数据包: 传感器设置
 
-    字节布局:
-    - data1: 脚感应距离（厘米）
-    - data2: 杀菌时间（分钟）
-    - data3: [脚感应启用(1位), 杀菌启用(1位), 保留(6位)]
+    字节布局 (根据参考实现):
+    - data1: [脚感启用档位(4位), 脚感距离档位(4位)]
+    - data2: 未使用
+    - data3: [0000][杀菌时间档位(4位)]
 
     Args:
-        data1: 脚感应距离值
-        data2: 杀菌时间值
-        data3: 低位中的启用标志
+        data1: 包含脚感启用档位(高4位)和脚感距离档位(低4位)的第一个数据字节
+        data2: 未使用的第二个数据字节
+        data3: 包含杀菌时间档位(高4位)的第三个数据字节
 
     Returns:
         包含解码传感器设置的字典
     """
-    foot_sensor_enabled = bool(data3 & 0x01)
-    sterilization_enabled = bool(data3 & 0x02)
+    # 参考: parseSensorStatus
+    foot_sensor_enabled = (data1 >> 4) & 0x0F  # data1 高4位: 脚感启用档位 (0-15)
+    foot_sensor_distance = data1 & 0x0F         # data1 低4位: 脚感距离档位 (0-15)
+    sterilization_time = (data3 >> 4) & 0x0F   # data3 高4位: 杀菌时间档位
 
     return {
-        "foot_sensor_enabled": foot_sensor_enabled,
-        "foot_sensor_distance": data1,
-        "sterilization_enabled": sterilization_enabled,
-        "sterilization_time": data2,
+        "foot_sensor_enabled": foot_sensor_enabled,  # 改为 int (0-15) 而非 bool
+        "foot_sensor_distance": foot_sensor_distance,
+        "sterilization_time": sterilization_time,
     }
 
 

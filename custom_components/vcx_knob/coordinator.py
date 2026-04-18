@@ -20,33 +20,35 @@ Home Assistant 实体的状态管理。
     "voice_enabled": bool,
     "sensors_enabled": bool,
     "lights_enabled": bool,
-    # Type 02: 温度
-    "water_temp_code": int,
-    "water_temp_value": str | int,
-    "seat_temp_code": int,
-    "seat_temp_value": str | int,
-    "wind_temp_code": int,
-    "wind_temp_value": str | int,
-    "water_level_code": int,
-    "wind_level_code": int,
-    "light_brightness_code": int,
+    # Type 02: 温度（根据参考实现更新）
+    "water_level": int,
+    "water_temp_value": int,
+    "wind_level": int,
+    "wind_temp_value": int,
+    "seat_level": int,
+    "seat_temp_value": int,
+    "water_pressure": int,
+    "ambient_light_brightness": int,
     # Type 03: 百分比
     "air_percentage": int,
     "water_percentage": int,
     "radar_level": int,
     "cover_close_time": int,
-    # Type 04: 强度
+    # Type 04: 强度（根据参考实现更新）
     "cover_flip_intensity": int,
     "ring_flip_intensity": int,
     "cover_close_intensity": int,
-    # Type 05: 冲水参数
+    "ring_close_intensity": int,
+    # Type 05: 冲水参数（根据参考实现更新）
     "bubble_level": int,
-    "big_flush_timing": int,
-    "small_flush_timing": int,
-    # Type 06: 传感器
-    "foot_sensor_enabled": bool,
+    "big_flush_down": int,
+    "big_flush_water": int,
+    "small_flush_up": int,
+    "small_flush_water": int,
+    "small_flush_down": int,
+    # Type 06: 传感器（根据参考实现更新）
+    "foot_sensor_enabled": int,
     "foot_sensor_distance": int,
-    "sterilization_enabled": bool,
     "sterilization_time": int,
 }
 """
@@ -358,21 +360,33 @@ class VCXKnobBLEClient:
     def _notification_handler(self, sender: int, data: bytearray) -> None:
         """处理来自设备的通知
 
+        BLE 通知可能包含多个连续的 8 字节状态包，需要按 PACKET_TOTAL_SIZE 切分。
+
         Args:
             sender: 发送通知的特征句柄
             data: 接收的数据字节
         """
         hex_str = data.hex().upper()
-        _LOGGER.debug("收到通知: %s", hex_str)
+        _LOGGER.debug("收到通知(%d字节): %s", len(data), hex_str)
 
-        # 添加到状态缓冲区
-        self._status_buffer.append(hex_str)
+        # 按 8 字节切分，逐个加入缓冲区
+        PACKET_SIZE = 8
+        for i in range(0, len(data), PACKET_SIZE):
+            chunk = data[i:i + PACKET_SIZE]
+            if len(chunk) == PACKET_SIZE:
+                self._status_buffer.append(chunk.hex().upper())
+            else:
+                _LOGGER.debug(
+                    "忽略不完整的尾部数据(%d字节): %s",
+                    len(chunk),
+                    chunk.hex().upper(),
+                )
 
         # 防止缓冲区增长过大
         if len(self._status_buffer) > 100:
             self._status_buffer = self._status_buffer[-100:]
 
-        # 通知回调
+        # 通知回调（保留原始数据兼容性）
         self._notification_callback(data)
 
     def get_status_buffer(self) -> list[str]:
