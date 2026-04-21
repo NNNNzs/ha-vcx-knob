@@ -72,6 +72,13 @@ BUTTON_DESCRIPTIONS: tuple[VCXKnobButtonDescription, ...] = (
         icon="mdi:vibrate",
         command=Command.ANMO,
     ),
+    # 功能按钮
+    VCXKnobButtonDescription(
+        key="bubble",
+        name="气泡",
+        icon="mdi:buffer",
+        command=Command.PAOMO,
+    ),
     # 控制按钮
     VCXKnobButtonDescription(
         key="stop",

@@ -41,34 +41,6 @@ class VCXKnobSwitchDescription:
 
 SWITCH_DESCRIPTIONS: tuple[VCXKnobSwitchDescription, ...] = (
     VCXKnobSwitchDescription(
-        key="flush",
-        name="冲水",
-        icon="mdi:toilet",
-        state_key="flush_enabled",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    VCXKnobSwitchDescription(
-        key="seat",
-        name="座圈",
-        icon="mdi:seat",
-        state_key="seat_enabled",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    VCXKnobSwitchDescription(
-        key="bubble",
-        name="气泡",
-        icon="mdi:buffer",
-        state_key="bubble_enabled",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    VCXKnobSwitchDescription(
-        key="air",
-        name="热风",
-        icon="mdi:air-filter",
-        state_key="air_enabled",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    VCXKnobSwitchDescription(
         key="radar",
         name="雷达",
         icon="mdi:radar",

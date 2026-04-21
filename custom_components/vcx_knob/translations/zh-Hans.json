@@ -92,18 +92,6 @@
       }
     },
     "switch": {
-      "flush": {
-        "name": "冲水"
-      },
-      "seat": {
-        "name": "座圈"
-      },
-      "bubble": {
-        "name": "气泡"
-      },
-      "air": {
-        "name": "热风"
-      },
       "radar": {
         "name": "雷达"
       },
@@ -132,6 +120,39 @@
       },
       "small_flush": {
         "name": "小冲水"
+      },
+      "feminine_wash": {
+        "name": "妇洗"
+      },
+      "rear_wash": {
+        "name": "臀洗"
+      },
+      "massage": {
+        "name": "按摩"
+      },
+      "stop": {
+        "name": "停止"
+      },
+      "dry": {
+        "name": "烘干"
+      },
+      "open_lid": {
+        "name": "翻盖"
+      },
+      "open_seat": {
+        "name": "翻圈"
+      },
+      "close": {
+        "name": "关闭"
+      },
+      "runbi": {
+        "name": "润壁"
+      },
+      "self_clean": {
+        "name": "自洁"
+      },
+      "bubble": {
+        "name": "气泡"
       },
       "factory_reset": {
         "name": "恢复出厂设置"

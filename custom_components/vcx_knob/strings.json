@@ -92,18 +92,6 @@
       }
     },
     "switch": {
-      "flush": {
-        "name": "Flush"
-      },
-      "seat": {
-        "name": "Seat"
-      },
-      "bubble": {
-        "name": "Bubble"
-      },
-      "air": {
-        "name": "Air Dry"
-      },
       "radar": {
         "name": "Radar"
       },
@@ -132,6 +120,39 @@
       },
       "small_flush": {
         "name": "Small Flush"
+      },
+      "feminine_wash": {
+        "name": "Feminine Wash"
+      },
+      "rear_wash": {
+        "name": "Rear Wash"
+      },
+      "massage": {
+        "name": "Massage"
+      },
+      "stop": {
+        "name": "Stop"
+      },
+      "dry": {
+        "name": "Dry"
+      },
+      "open_lid": {
+        "name": "Open Lid"
+      },
+      "open_seat": {
+        "name": "Open Seat"
+      },
+      "close": {
+        "name": "Close"
+      },
+      "runbi": {
+        "name": "Pre-wet"
+      },
+      "self_clean": {
+        "name": "Self Clean"
+      },
+      "bubble": {
+        "name": "Bubble"
       },
       "factory_reset": {
         "name": "Factory Reset"

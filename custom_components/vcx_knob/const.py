@@ -248,26 +248,6 @@ class SelectEntityDescription(EntityDescription):
 
 SWITCHES = [
     SwitchEntityDescription(
-        key="flush",
-        name="冲水",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    SwitchEntityDescription(
-        key="seat",
-        name="座圈",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    SwitchEntityDescription(
-        key="bubble",
-        name="气泡",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    SwitchEntityDescription(
-        key="air",
-        name="热风",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    SwitchEntityDescription(
         key="radar",
         name="雷达",
         entity_category=EntityCategory.CONFIG,

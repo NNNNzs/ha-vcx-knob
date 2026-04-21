@@ -166,6 +166,9 @@ docker exec homeassistant find /config/custom_components/vcx_knob -name "*.pyc" 
 - 主集成代码：`/custom_components/vcx_knob/`
 - 开发脚本：`/scripts/development/`
 - 文档：`DESIGN.md`、`REQUIREMENTS.md`、`README.md`
+## 参考
+微信小程序反编译程序地址 /root/project/skj-toilet
+nodejs 后端 /root/project/skj-toilet/nodejs-service ，未经测试，可行度不高
 
 ## 依赖项
 
