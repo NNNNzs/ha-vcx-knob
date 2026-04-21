@@ -90,7 +90,7 @@ ha-vcx-knob - VCX-Knob 智能马桶 Home Assistant 自定义集成
 - NFR-008: 集成必须记录错误日志以便调试
 
 ### 3.3 兼容性要求
-- NFR-009: 集成必须支持 Home Assistant 2023.11.0 及以上版本
+- NFR-009: 集成必须支持 Home Assistant 2024.1 及以上版本
 - NFR-010: 集成必须支持 Python 3.11 及以上版本
 - NFR-011: 集成必须支持主流操作系统（Linux、macOS、Windows）
 - NFR-012: 集成必须支持主流蓝牙适配器
@@ -112,7 +112,7 @@ ha-vcx-knob - VCX-Knob 智能马桶 Home Assistant 自定义集成
 
 ### 4.1 依赖项
 - bleak >= 0.21.0 (BLE 通信库)
-- Home Assistant >= 2023.11.0
+- Home Assistant >= 2024.1
 - Python >= 3.11
 
 ### 4.2 BLE 协议约束
@@ -120,7 +120,7 @@ ha-vcx-knob - VCX-Knob 智能马桶 Home Assistant 自定义集成
 - 命令帧格式: AA 08 02 {cmd} {d1} {d2} {d3} {checksum}
 - 状态帧格式: AA 08 88 {type} {d1} {d2} {d3} {checksum}
 - 设备名称过滤: "VCX-Knob"
-- Service UUID: 0000FFF0-0000-1000-8000-00805F9B34FB
+- Service UUID: 0000FFA0-0000-1000-8000-00805F9B34FB
 
 ### 4.3 HA 集成规范
 - 必须遵循 HA custom_components 规范

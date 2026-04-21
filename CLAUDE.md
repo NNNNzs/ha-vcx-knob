@@ -118,11 +118,11 @@ docker exec homeassistant find /config/custom_components/vcx_knob -name "*.pyc" 
 
 ### 实体平台文件
 
-- `sensor.py` - 13 个传感器实体（信号强度、百分比、时间、距离）
-- `switch.py` - 11 个开关实体（开/关控制）
-- `button.py` - 3 个按钮实体（一次性操作）
+- `sensor.py` - 18 个传感器实体（信号强度、百分比、时间、距离、水压、氛围灯亮度等）
+- `switch.py` - 7 个开关实体（雷达、语音、传感器、自动模式、夜灯、脚感应、杀菌）
+- `button.py` - 15 个按钮实体（冲水、清洗、烘干、翻盖/圈、润壁、自洁等一次性操作）
 - `select.py` - 7 个选择实体（多选项设置）
-- `binary_sensor.py` - 1 个连接状态传感器
+- `binary_sensor.py` - 2 个二进制传感器（BLE 连接状态、配对状态）
 
 ### BLE 协议
 

@@ -1,0 +1,27 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Zip custom_component
+        run: |
+          cd custom_components
+          zip -r vcx_knob.zip vcx_knob/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: custom_components/vcx_knob.zip
+          generate_release_notes: true

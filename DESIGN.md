@@ -58,9 +58,9 @@
              │
 ┌────────────▼──────────────────────────────────────────────────┐
 │                    VCX-Knob Device                             │
-│  • Service UUID: 0000FFF0-0000-1000-8000-00805F9B34FB          │
-│  • Write Characteristic: 0000FFF1-...                          │
-│  • Notify Characteristic: 0000FFF2-...                         │
+│  • Service UUID: 0000FFA0-0000-1000-8000-00805F9B34FB          │
+│  • Write Characteristic: 0000FFA1-...                          │
+│  • Notify Characteristic: 0000FFA2-...                         │
 └───────────────────────────────────────────────────────────────┘
 ```
 
@@ -102,11 +102,11 @@
 - 创建配置条目
 
 #### 2.2.6 实体模块
-- `sensors.py` - 传感器实体（13个）
-- `switches.py` - 开关实体（11个）
-- `buttons.py` - 按钮实体（3个）
-- `selects.py` - 选择实体（7个）
-- `binary_sensor.py` - 二进制传感器（1个）
+- `sensor.py` - 传感器实体（18个）
+- `switch.py` - 开关实体（7个）
+- `button.py` - 按钮实体（15个）
+- `select.py` - 选择实体（7个）
+- `binary_sensor.py` - 二进制传感器（2个）
 
 ---
 
@@ -162,10 +162,11 @@
 
 ## 4. 实体设计
 
-### 4.1 传感器实体 (13个)
+### 4.1 传感器实体 (18个)
 
 | 实体 | 键名 | 单位 | 说明 |
 |------|------|------|------|
+| 蓝牙地址 | device_address | - | 设备 BLE 地址 |
 | 信号强度 | rssi | dBm | BLE RSSI 值 |
 | 热风百分比 | air_percentage | % | 当前热风输出百分比 |
 | 水量百分比 | water_percentage | % | 当前水量百分比 |
@@ -174,20 +175,20 @@
 | 盖板翻转强度 | cover_flip_intensity | - | 盖板翻转电机强度 |
 | 座圈翻转强度 | ring_flip_intensity | - | 座圈翻转电机强度 |
 | 盖板关闭强度 | cover_close_intensity | - | 盖板关闭电机强度 |
+| 座圈关闭强度 | ring_close_intensity | - | 座圈关闭电机强度 |
 | 气泡等级 | bubble_level | - | 气泡功能等级 |
-| 大冲水时间 | big_flush_timing | s | 大冲水持续时间 |
-| 小冲水时间 | small_flush_timing | s | 小冲水持续时间 |
+| 大冲水量 | big_flush_water | s | 大冲水持续时间 |
+| 小冲水量 | small_flush_water | s | 小冲水持续时间 |
+| 小冲上冲时间 | small_flush_up | s | 小冲上冲持续时间 |
 | 脚感应距离 | foot_sensor_distance | cm | 脚感应器检测距离 |
 | 杀菌时间 | sterilization_time | min | 杀菌功能持续时间 |
+| 水压 | water_pressure | - | 当前水压值 |
+| 氛围灯亮度 | ambient_light_brightness | % | 氛围灯当前亮度 |
 
-### 4.2 开关实体 (11个)
+### 4.2 开关实体 (7个)
 
 | 实体 | 键名 | 命令 | 说明 |
 |------|------|------|------|
-| 冲水 | flush | - | 启用/禁用冲水功能 |
-| 座圈 | seat | - | 启用/禁用座圈功能 |
-| 气泡 | bubble | - | 启用/禁用气泡功能 |
-| 热风 | air | - | 启用/禁用热风烘干 |
 | 雷达 | radar | - | 启用/禁用雷达感应 |
 | 语音控制 | voice | YUYIN | 启用/禁用语音控制 |
 | 传感器 | sensor | - | 启用/禁用传感器 |
@@ -196,13 +197,24 @@
 | 脚感应 | foot_sensor | - | 启用/禁用脚感应 |
 | 杀菌 | sterilization | - | 启用/禁用杀菌功能 |
 
-### 4.3 按钮实体 (3个)
+### 4.3 按钮实体 (15个)
 
 | 实体 | 键名 | 命令 | 说明 |
 |------|------|------|------|
 | 大冲水 | big_flush | DACHONG | 触发大冲水 |
 | 小冲水 | small_flush | XIAOCHONG | 触发小冲水 |
-| 恢复出厂 | factory_reset | FUYUAN | 恢复出厂设置 |
+| 妇洗 | feminine_wash | FUXI | 触发妇洗 |
+| 臀洗 | rear_wash | TUNXI | 触发臀洗 |
+| 按摩 | massage | ANMO | 触发按摩 |
+| 气泡 | bubble | PAOMO | 触发气泡 |
+| 停止 | stop | STOP | 停止所有功能 |
+| 烘干 | dry | HONGGAN | 触发热风烘干 |
+| 翻盖 | open_lid | FANGAI | 打开盖板 |
+| 翻圈 | open_seat | FANQUAN | 打开座圈 |
+| 关闭 | close | JIENENG | 关闭盖板和座圈 |
+| 润壁 | runbi | RUNBI | 触发润壁 |
+| 自洁 | self_clean | ZIJIE | 触发自洁 |
+| 恢复出厂设置 | factory_reset | HUIFUCHUCHANG | 恢复出厂设置 |
 
 ### 4.4 选择实体 (7个)
 
@@ -216,11 +228,12 @@
 | 灯光亮度 | light_brightness | GUANGDANG | off/low/medium/high |
 | 雷达灵敏度 | radar_sensitivity | CHUANGAN | low/medium/high |
 
-### 4.5 二进制传感器 (1个)
+### 4.5 二进制传感器 (2个)
 
 | 实体 | 键名 | 说明 |
 |------|------|------|
-| 已连接 | connection | BLE 连接状态 |
+| 蓝牙连接 | connection | BLE 连接状态 |
+| 配对状态 | paired | 蓝牙配对状态 |
 
 ---
 
