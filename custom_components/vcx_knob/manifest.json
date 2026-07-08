@@ -3,7 +3,7 @@
   "name": "VCX-Knob Smart Toilet",
   "codeowners": ["@NNNNzs"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["bluetooth"],
   "documentation": "https://github.com/NNNNzs/ha-vcx-knob",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/NNNNzs/ha-vcx-knob/issues",
