@@ -524,6 +524,7 @@ STATE_AIR_ENABLED = "air_enabled"
 STATE_RADAR_ENABLED = "radar_enabled"
 STATE_VOICE_ENABLED = "voice_enabled"
 STATE_SENSORS_ENABLED = "sensors_enabled"
+STATE_SEAT_OCCUPANCY = "seat_occupancy"  # 座圈有人入座状态
 STATE_LIGHTS_ENABLED = "lights_enabled"
 
 # 新增状态键（来自 Type 01 包扩展字段）

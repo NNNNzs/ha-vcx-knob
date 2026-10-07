@@ -223,6 +223,9 @@
       }
     },
     "binary_sensor": {
+      "occupancy": {
+        "name": "Occupancy"
+      },
       "connection": {
         "name": "Connected"
       },

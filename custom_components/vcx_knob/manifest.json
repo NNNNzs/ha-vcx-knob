@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/NNNNzs/ha-vcx-knob/issues",
   "requirements": ["bleak>=0.21.0"],
-  "version": "1.0.0"
+  "version": "1.0.4"
 }

@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-10-07
+
+### Added
+- 新增有人入座二进制传感器（`binary_sensor.you_ren_ru_zuo` / `occupancy`），逆向解析 Type 01 状态帧第 4 字节 Bit 1 判定座圈微动/重力感应
+- 补充有人入座传感器中英文翻译与实体描述映射
+
 ### Changed
+- 完善协议解析，将状态帧中误标为脚感的传感器状态细化为真实入座状态
+
 - 将冲水、座圈、气泡、热风从 switch 实体改为 button 实体，更符合一次性操作的语义
 - 将 entity_category 从字符串改为 EntityCategory 枚举，适配新版 HA
 - 修复 BLE 写入方式（改为无响应写入），优化实体可用性检测

@@ -223,6 +223,9 @@
       }
     },
     "binary_sensor": {
+      "occupancy": {
+        "name": "有人入座"
+      },
       "connection": {
         "name": "蓝牙连接"
       },

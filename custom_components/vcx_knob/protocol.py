@@ -234,7 +234,8 @@ def decode_type_01_packet(data1: int, data2: int, data3: int) -> dict:
     kongqi_status = bool(data1 & 0x10)     # 空气状态
     leida_status = bool(data1 & 0x08)      # 雷达状态
     yuyin_status = bool(data1 & 0x04)      # 语音状态
-    jiaogan_status = bool(data1 & 0x02)    # 脚感状态
+    jiaogan_status = bool(data1 & 0x02)    # 传感器状态 (小程序误标为脚感，实测为有人入座状态)
+    seat_occupancy = bool(data1 & 0x02)    # 有人入座状态
     jieneng_status = bool(data1 & 0x01)    # 节能状态
 
     # data2 的 8 个位
@@ -257,6 +258,7 @@ def decode_type_01_packet(data1: int, data2: int, data3: int) -> dict:
         "radar_enabled": leida_status,
         "voice_enabled": yuyin_status,
         "sensors_enabled": jiaogan_status,
+        "seat_occupancy": seat_occupancy,
         "lights_enabled": jieneng_status,
         # 新增字段
         "water_surface_enabled": shuimian_status,

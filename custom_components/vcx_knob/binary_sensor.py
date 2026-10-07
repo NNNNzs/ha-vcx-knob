@@ -28,6 +28,11 @@ _LOGGER = logging.getLogger(__name__)
 
 BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
+        key="occupancy",
+        name="有人入座",
+        device_class="occupancy",
+    ),
+    BinarySensorEntityDescription(
         key="connection",
         name="蓝牙连接",
         device_class="connectivity",
@@ -93,6 +98,8 @@ class VCXKnobBinarySensor(BinarySensorEntity):
         data = self._coordinator.data
         if data is None:
             return False
+        if self.entity_description.key == "occupancy":
+            return data.get("seat_occupancy", False)
         if self.entity_description.key == "connection":
             return data.get("connected", False)
         if self.entity_description.key == "paired":
