@@ -17,8 +17,8 @@ jobs:
 
       - name: Zip custom_component
         run: |
-          cd custom_components
-          zip -r vcx_knob.zip vcx_knob/
+          cd custom_components/vcx_knob
+          zip -r ../vcx_knob.zip .
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

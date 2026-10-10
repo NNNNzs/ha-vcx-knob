@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-10-10
+
+### Fixed
+- 修复 HACS Release ZIP 包结构：压缩包根目录直接包含集成文件，避免安装后多嵌套一层
+
 ## [1.0.4] - 2026-10-07
 
 ### Added
